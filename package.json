@@ -1,0 +1,46 @@
+{
+  "name": "tiny-games",
+  "version": "0.1.0",
+  "description": "一个纯前端小游戏集锦，提供导航页、统一游戏布局和可持续扩展的小游戏框架。",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "eslint ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/XHY13770656533/tiny-games.git"
+  },
+  "keywords": [
+    "tiny-games",
+    "vite",
+    "react",
+    "typescript",
+    "frontend-games"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/XHY13770656533/tiny-games/issues"
+  },
+  "homepage": "https://github.com/XHY13770656533/tiny-games#readme",
+  "dependencies": {
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "react-router-dom": "^7.15.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.2",
+    "eslint": "^10.4.0",
+    "globals": "^17.6.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.3",
+    "vite": "^8.0.13"
+  },
+  "private": true,
+  "type": "module"
+}

@@ -1,0 +1,14 @@
+---
+description: Tiny Games project conventions
+alwaysApply: true
+---
+
+# Tiny Games Rules
+
+- 使用中文维护面向协作者的说明文档。
+- 新增小游戏时先阅读 `agent.md` 和 `docs/vibe-coding/playbook.md`。
+- 首页游戏信息必须来源于 `src/data/games.ts`。
+- 每个游戏放在 `src/games/<game-id>/`，复杂规则拆到 `logic.ts`。
+- 页面外壳优先复用 `GameLayout`，不要重复实现返回首页、标题和说明结构。
+- 样式优先使用 CSS Modules，共享变量放在 `src/styles/variables.css`。
+- 提交前运行 `npm run lint` 和 `npm run build`。

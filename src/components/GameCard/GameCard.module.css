@@ -1,0 +1,102 @@
+.card {
+  --accent-color: var(--color-primary);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: var(--shadow-card);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--accent-color) 42%, var(--color-border));
+  box-shadow: var(--shadow-card-hover);
+}
+
+.cover {
+  display: grid;
+  min-height: 8.5rem;
+  place-items: center;
+  border-radius: 1rem;
+  color: #fff;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent-color) 82%, #fff), var(--accent-color)),
+    var(--accent-color);
+}
+
+.cover span {
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  font-weight: 800;
+}
+
+.content {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.headingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.headingRow h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.25rem;
+}
+
+.status {
+  flex: 0 0 auto;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  color: var(--accent-color);
+  background: color-mix(in srgb, var(--accent-color) 12%, white);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.content p {
+  margin: 0;
+  color: var(--color-muted);
+  line-height: 1.7;
+}
+
+.meta,
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.meta span,
+.tags span {
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: var(--color-surface-muted);
+  color: var(--color-muted);
+  font-size: 0.78rem;
+}
+
+.action {
+  display: inline-flex;
+  justify-content: center;
+  padding: 0.8rem 1rem;
+  border-radius: 0.9rem;
+  color: #fff;
+  background: var(--accent-color);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.action:hover {
+  filter: brightness(0.95);
+}

@@ -1,0 +1,74 @@
+import type { GameMeta } from '../types/game';
+
+export const games: GameMeta[] = [
+  {
+    id: 'tictactoe',
+    title: '井字棋',
+    description: '经典 3x3 双人棋盘游戏，也是新增小游戏的参考样板。',
+    path: '/games/tictactoe',
+    category: 'strategy',
+    difficulty: 'easy',
+    status: 'available',
+    tags: ['棋盘', '双人', '样板'],
+    accentColor: '#7c3aed',
+  },
+  {
+    id: 'memory',
+    title: '翻牌记忆',
+    description: '翻开卡片并匹配相同图案，适合练习动画与状态管理。',
+    path: '/games/memory',
+    category: 'puzzle',
+    difficulty: 'easy',
+    status: 'planned',
+    tags: ['卡片', '记忆', '动画'],
+    accentColor: '#db2777',
+  },
+  {
+    id: 'snake',
+    title: '贪吃蛇',
+    description: '方向键控制蛇移动，适合沉淀键盘控制和计时循环能力。',
+    path: '/games/snake',
+    category: 'reflex',
+    difficulty: 'medium',
+    status: 'planned',
+    tags: ['键盘', '计分', '循环'],
+    accentColor: '#16a34a',
+  },
+  {
+    id: '2048',
+    title: '2048',
+    description: '滑动数字方块合并到 2048，适合抽离纯逻辑函数。',
+    path: '/games/2048',
+    category: 'puzzle',
+    difficulty: 'medium',
+    status: 'planned',
+    tags: ['数字', '滑动', '分数'],
+    accentColor: '#ea580c',
+  },
+  {
+    id: 'minesweeper',
+    title: '扫雷',
+    description: '通过数字提示定位地雷，适合递归展开与棋盘状态建模。',
+    path: '/games/minesweeper',
+    category: 'strategy',
+    difficulty: 'hard',
+    status: 'planned',
+    tags: ['棋盘', '递归', '推理'],
+    accentColor: '#2563eb',
+  },
+  {
+    id: 'breakout',
+    title: '打砖块',
+    description: '控制挡板反弹小球击碎砖块，适合后续引入 Canvas 实现。',
+    path: '/games/breakout',
+    category: 'reflex',
+    difficulty: 'hard',
+    status: 'planned',
+    tags: ['Canvas', '物理', '反应'],
+    accentColor: '#0891b2',
+  },
+];
+
+export function getGameById(id: string) {
+  return games.find((game) => game.id === id);
+}
