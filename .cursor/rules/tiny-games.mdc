@@ -12,3 +12,4 @@ alwaysApply: true
 - 页面外壳优先复用 `GameLayout`，不要重复实现返回首页、标题和说明结构。
 - 样式优先使用 CSS Modules，共享变量放在 `src/styles/variables.css`。
 - 提交前运行 `npm run lint` 和 `npm run build`。
+- 后续改动默认直接在 `main` 分支提交，并使用 `git push -u origin main` 推送，除非用户明确要求使用其他分支或 PR。

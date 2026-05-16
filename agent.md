@@ -77,6 +77,16 @@ tiny-games:recently-played
 tiny-games:favorites
 ```
 
+## Git 提交流程
+
+本项目后续默认采用直接提交到 `main` 分支的工作流，除非用户明确要求创建功能分支或 PR。
+
+- 默认在 `main` 分支完成改动
+- 改动完成后运行必要校验，例如 `npm run lint` 和 `npm run build`
+- 使用描述性 commit message 提交
+- 直接执行 `git push -u origin main` 推送
+- 不需要为常规改动创建额外功能分支
+
 ## Agent 工作流
 
 1. 明确本次任务影响的游戏或通用模块
