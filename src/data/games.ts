@@ -2,6 +2,17 @@ import type { GameMeta } from '../types/game';
 
 export const games: GameMeta[] = [
   {
+    id: 'electronic-pet',
+    title: '电子宠物',
+    description: '陪伴一只会散步、探索和休息的小动物，通过喂食、喝水和玩耍进行轻松互动。',
+    path: '/games/electronic-pet',
+    category: 'casual',
+    difficulty: 'easy',
+    status: 'available',
+    tags: ['陪伴', '互动', '小动物'],
+    accentColor: '#14b8a6',
+  },
+  {
     id: 'tictactoe',
     title: '井字棋',
     description: '经典 3x3 双人棋盘游戏，也是新增小游戏的参考样板。',

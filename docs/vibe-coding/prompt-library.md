@@ -62,3 +62,15 @@
 - 处理 games.ts 中不存在的旧 id
 - 运行 npm run lint 和 npm run build
 ```
+
+## 扩展电子宠物互动
+
+```txt
+请扩展电子宠物游戏的互动体验。
+要求：
+- 保持没有健康度、生命值或失败惩罚的设定
+- 新增互动时更新 src/games/electronic-pet/logic.ts
+- 小动物的视觉变化放在 styles.module.css
+- 空闲行为和玩家互动需要有清晰区分
+- 运行 npm run lint 和 npm run build
+```

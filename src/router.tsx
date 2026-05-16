@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import AppShell from './components/AppShell/AppShell';
 import HomePage from './pages/HomePage/HomePage';
 import NotFoundPage from './pages/NotFoundPage/NotFoundPage';
+import ElectronicPetGame from './games/electronic-pet';
 import TictactoeGame from './games/tictactoe';
 import MemoryGame from './games/memory';
 import SnakeGame from './games/snake';
@@ -16,6 +17,7 @@ export const router = createBrowserRouter([
     errorElement: <NotFoundPage />,
     children: [
       { index: true, element: <HomePage /> },
+      { path: 'games/electronic-pet', element: <ElectronicPetGame /> },
       { path: 'games/tictactoe', element: <TictactoeGame /> },
       { path: 'games/memory', element: <MemoryGame /> },
       { path: 'games/snake', element: <SnakeGame /> },
