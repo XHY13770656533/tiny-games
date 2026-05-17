@@ -24,6 +24,7 @@ import {
 import styles from './styles.module.css';
 
 const maxLogLength = 7;
+const spinTurns = 4;
 
 const effectLabels: Array<{ key: keyof ActiveEffects; label: string; unit: string }> = [
   { key: 'doubleRewardSpins', label: '双倍奖励', unit: '次' },
@@ -81,7 +82,11 @@ export default function LuckyWheelGame() {
     setInventory(result.inventory);
     setEffects(result.effects);
     setSelectedSegmentId(result.segment.id);
-    setWheelRotation((currentRotation) => currentRotation + 1440 + (360 - centerAngle));
+    setWheelRotation((currentRotation) => {
+      const targetRotation = (360 - centerAngle) % 360;
+      const completedTurns = Math.floor(currentRotation / 360);
+      return (completedTurns + spinTurns) * 360 + targetRotation;
+    });
 
     appendLog([
       ...result.messages,
@@ -246,7 +251,7 @@ export default function LuckyWheelGame() {
                 <span>Lucky</span>
                 <strong>Spin</strong>
               </div>
-              {wheelSegments.map((segment, index) => (
+              {wheelSegments.map((segment) => (
                 <span
                   className={[
                     styles.segmentLabel,
@@ -254,7 +259,7 @@ export default function LuckyWheelGame() {
                   ].filter(Boolean).join(' ')}
                   key={segment.id}
                   style={{
-                    '--segment-angle': `${(360 / wheelSegments.length) * index}deg`,
+                    '--segment-angle': `${getSegmentCenterAngle(segment.id) - 90}deg`,
                   } as CSSProperties}
                 >
                   {segment.label}
