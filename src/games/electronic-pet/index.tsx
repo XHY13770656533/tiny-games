@@ -81,6 +81,10 @@ export default function ElectronicPetGame() {
     '--pet-accent': selectedPet.accentColor,
   } as CSSProperties;
 
+  const wrapperStyle = {
+    '--pet-accent': selectedPet.accentColor,
+  } as CSSProperties;
+
   const stageStyle = {
     '--cursor-x': `${pointerState.x}%`,
     '--cursor-y': `${pointerState.y}%`,
@@ -184,7 +188,7 @@ export default function ElectronicPetGame() {
         </div>
       }
     >
-      <div className={styles.wrapper}>
+      <div className={styles.wrapper} style={wrapperStyle}>
         <section className={styles.selector} aria-label="选择电子宠物">
           {petProfiles.map((profile) => (
             <button
