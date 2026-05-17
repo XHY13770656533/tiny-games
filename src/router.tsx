@@ -10,6 +10,7 @@ import SnakeGame from './games/snake';
 import Game2048 from './games/game-2048';
 import MinesweeperGame from './games/minesweeper';
 import BreakoutGame from './games/breakout';
+import LuckyWheelGame from './games/lucky-wheel';
 
 export const router = createBrowserRouter([
   {
@@ -20,6 +21,7 @@ export const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: 'games/pony-river', element: <PonyRiverGame /> },
       { path: 'games/electronic-pet', element: <ElectronicPetGame /> },
+      { path: 'games/lucky-wheel', element: <LuckyWheelGame /> },
       { path: 'games/tictactoe', element: <TictactoeGame /> },
       { path: 'games/memory', element: <MemoryGame /> },
       { path: 'games/snake', element: <SnakeGame /> },
