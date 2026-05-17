@@ -2,6 +2,17 @@ import type { GameMeta } from '../types/game';
 
 export const games: GameMeta[] = [
   {
+    id: 'pony-river',
+    title: '小马过河',
+    description: '用有限草料让小马临时长高，猜测隐藏河深并连续趟过所有小河。',
+    path: '/games/pony-river',
+    category: 'strategy',
+    difficulty: 'medium',
+    status: 'available',
+    tags: ['猜测', '资源管理', '动画', '小马'],
+    accentColor: '#0ea5e9',
+  },
+  {
     id: 'lucky-wheel',
     title: '幸运转盘',
     description: '消耗金币转动转盘，利用奖励、道具和特殊事件累积金币，挑战 5 个逐步提高的关卡目标。',

@@ -1,4 +1,5 @@
 .wrapper {
+  --pet-accent: #14b8a6;
   display: grid;
   gap: 1.25rem;
 }

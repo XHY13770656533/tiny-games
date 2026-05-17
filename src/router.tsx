@@ -3,6 +3,7 @@ import AppShell from './components/AppShell/AppShell';
 import HomePage from './pages/HomePage/HomePage';
 import NotFoundPage from './pages/NotFoundPage/NotFoundPage';
 import ElectronicPetGame from './games/electronic-pet';
+import PonyRiverGame from './games/pony-river';
 import TictactoeGame from './games/tictactoe';
 import MemoryGame from './games/memory';
 import SnakeGame from './games/snake';
@@ -18,6 +19,7 @@ export const router = createBrowserRouter([
     errorElement: <NotFoundPage />,
     children: [
       { index: true, element: <HomePage /> },
+      { path: 'games/pony-river', element: <PonyRiverGame /> },
       { path: 'games/electronic-pet', element: <ElectronicPetGame /> },
       { path: 'games/lucky-wheel', element: <LuckyWheelGame /> },
       { path: 'games/tictactoe', element: <TictactoeGame /> },
