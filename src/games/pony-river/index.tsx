@@ -29,7 +29,6 @@ export default function PonyRiverGame() {
   const [lastOutcome, setLastOutcome] = useState<AttemptRecord | null>(null);
   const timersRef = useRef<number[]>([]);
 
-  const currentRiver = getCurrentRiver(game);
   const remainingRivers = getRemainingRiverCount(game);
   const ponyHeight = getPonyHeight(defaultLevelConfig.baseHeight, plannedFeed);
   const isBusy = phase === 'crossing';
