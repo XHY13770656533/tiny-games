@@ -34,6 +34,11 @@ export default function PonyRiverGame() {
   const ponyHeight = getPonyHeight(defaultLevelConfig.baseHeight, plannedFeed);
   const isBusy = phase === 'crossing';
   const isTerminal = game.status !== 'playing';
+  const depthSignText = game.status === 'lost' && lastOutcome && phase !== 'crossing'
+    ? `${lastOutcome.riverDepth} 米`
+    : game.status === 'won'
+      ? '全部通过'
+      : '深度 ?';
   const canControl = !isBusy && !isTerminal;
   const visibleFeedOptions = useMemo(
     () => Array.from(new Set([...quickFeedOptions, game.fodder])).filter((amount) => amount <= game.fodder),
@@ -146,13 +151,7 @@ export default function PonyRiverGame() {
               <span className={styles.rippleOne} />
               <span className={styles.rippleTwo} />
               <span className={styles.rippleThree} />
-              <span className={styles.depthSign}>
-                {lastOutcome
-                && phase !== 'crossing'
-                && (isTerminal || currentRiver?.id !== lastOutcome.riverId)
-                  ? `${lastOutcome.riverDepth} 米`
-                  : '深度 ?'}
-              </span>
+              <span className={styles.depthSign}>{depthSignText}</span>
             </div>
             <div className={styles.rightBank}>
               <span className={styles.bankLabel}>对岸</span>
