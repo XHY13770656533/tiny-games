@@ -2,6 +2,17 @@ import type { GameMeta } from '../types/game';
 
 export const games: GameMeta[] = [
   {
+    id: 'pony-river',
+    title: '小马过河',
+    description: '用有限草料让小马临时长高，猜测隐藏河深并连续趟过所有小河。',
+    path: '/games/pony-river',
+    category: 'strategy',
+    difficulty: 'medium',
+    status: 'available',
+    tags: ['猜测', '资源管理', '动画', '小马'],
+    accentColor: '#0ea5e9',
+  },
+  {
     id: 'electronic-pet',
     title: '电子宠物',
     description: '从三只小动物中选择一位伙伴，通过喂食、喝水、玩耍和鼠标互动进行轻松陪伴。',
