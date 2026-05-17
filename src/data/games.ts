@@ -2,6 +2,17 @@ import type { GameMeta } from '../types/game';
 
 export const games: GameMeta[] = [
   {
+    id: 'lucky-wheel',
+    title: '幸运转盘',
+    description: '消耗金币转动转盘，利用奖励、道具和特殊事件累积金币，挑战 5 个逐步提高的关卡目标。',
+    path: '/games/lucky-wheel',
+    category: 'casual',
+    difficulty: 'medium',
+    status: 'available',
+    tags: ['转盘', '金币', '道具', '概率'],
+    accentColor: '#f97316',
+  },
+  {
     id: 'electronic-pet',
     title: '电子宠物',
     description: '从三只小动物中选择一位伙伴，通过喂食、喝水、玩耍和鼠标互动进行轻松陪伴。',
