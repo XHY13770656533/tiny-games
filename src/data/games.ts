@@ -2,6 +2,17 @@ import type { GameMeta } from '../types/game';
 
 export const games: GameMeta[] = [
   {
+    id: 'summon-monsters',
+    title: '召唤怪物',
+    description: '扮演邪恶魔法师，在限时内输入中文咒语召唤怪物，组建军团自动迎战进攻的勇者。',
+    path: '/games/summon-monsters',
+    category: 'strategy',
+    difficulty: 'hard',
+    status: 'available',
+    tags: ['打字', '召唤', '策略', '自动战斗'],
+    accentColor: '#7c2d12',
+  },
+  {
     id: 'pony-river',
     title: '小马过河',
     description: '用有限草料让小马临时长高，猜测隐藏河深并连续趟过所有小河。',

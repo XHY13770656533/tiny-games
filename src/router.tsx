@@ -11,6 +11,7 @@ import Game2048 from './games/game-2048';
 import MinesweeperGame from './games/minesweeper';
 import BreakoutGame from './games/breakout';
 import LuckyWheelGame from './games/lucky-wheel';
+import SummonMonstersGame from './games/summon-monsters';
 
 export const router = createBrowserRouter([
   {
@@ -19,6 +20,7 @@ export const router = createBrowserRouter([
     errorElement: <NotFoundPage />,
     children: [
       { index: true, element: <HomePage /> },
+      { path: 'games/summon-monsters', element: <SummonMonstersGame /> },
       { path: 'games/pony-river', element: <PonyRiverGame /> },
       { path: 'games/electronic-pet', element: <ElectronicPetGame /> },
       { path: 'games/lucky-wheel', element: <LuckyWheelGame /> },
