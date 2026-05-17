@@ -4,12 +4,12 @@ export const games: GameMeta[] = [
   {
     id: 'electronic-pet',
     title: '电子宠物',
-    description: '陪伴一只会散步、探索和休息的小动物，通过喂食、喝水和玩耍进行轻松互动。',
+    description: '从三只小动物中选择一位伙伴，通过喂食、喝水、玩耍和鼠标互动进行轻松陪伴。',
     path: '/games/electronic-pet',
     category: 'casual',
     difficulty: 'easy',
     status: 'available',
-    tags: ['陪伴', '互动', '小动物'],
+    tags: ['陪伴', '互动', '小动物', '鼠标追踪'],
     accentColor: '#14b8a6',
   },
   {

@@ -71,6 +71,20 @@
 - 保持没有健康度、生命值或失败惩罚的设定
 - 新增互动时更新 src/games/electronic-pet/logic.ts
 - 小动物的视觉变化放在 styles.module.css
+- 如果新增动物，需要同步 petProfiles、动物选择器样式和 README/Roadmap
 - 空闲行为和玩家互动需要有清晰区分
+- 运行 npm run lint 和 npm run build
+```
+
+
+## 为电子宠物新增动物形象
+
+```txt
+请为电子宠物新增一个可选择的小动物形象。
+要求：
+- 在 src/games/electronic-pet/logic.ts 的 petProfiles 中注册
+- 在 styles.module.css 中新增 animal-* 视觉样式
+- 保持眼睛跟随鼠标、互动道具动画和空闲行为可复用
+- 不增加健康度、生命值或失败惩罚
 - 运行 npm run lint 和 npm run build
 ```
