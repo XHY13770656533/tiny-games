@@ -5,38 +5,48 @@ import { useLocalStorage } from '../../hooks/useLocalStorage';
 import {
   clearIngredientAmount,
   coffeeRecipes,
+  createRandomOrder,
   createPathData,
   emptyAmounts,
   getIngredientPercent,
-  getRandomRecipe,
+  getOrderTarget,
   getTotalAmount,
   ingredientStep,
   ingredients,
   latteArtTemplates,
   maxDrinkAmount,
   scoreOrder,
+  sweetnessOptions,
   targetDrinkAmount,
+  temperatureOptions,
   updateIngredientAmount,
+  type CoffeeOrder,
   type CoffeeRecipe,
   type Ingredient,
   type IngredientAmounts,
   type OrderScore,
   type StrokePoint,
+  type SweetnessId,
+  type TemperatureId,
 } from './logic';
 import styles from './styles.module.css';
 
 const highScoreKey = 'tiny-games:coffee-simulator:high-score';
 
 export default function CoffeeSimulatorGame() {
-  const [recipe, setRecipe] = useState<CoffeeRecipe>(() => getRandomRecipe());
+  const [order, setOrder] = useState<CoffeeOrder>(() => createRandomOrder());
   const [amounts, setAmounts] = useState<IngredientAmounts>(emptyAmounts);
   const [stroke, setStroke] = useState<StrokePoint[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [result, setResult] = useState<OrderScore | null>(null);
   const [servedCount, setServedCount] = useState(0);
   const [totalScore, setTotalScore] = useState(0);
+  const [selectedSweetness, setSelectedSweetness] = useState<SweetnessId>('half');
+  const [selectedTemperature, setSelectedTemperature] = useState<TemperatureId>('hot');
   const [highScore, setHighScore] = useLocalStorage<number>(highScoreKey, 0);
 
+  const recipe = order.recipe;
+  const targetAmounts = useMemo(() => getOrderTarget(order), [order]);
   const totalAmount = getTotalAmount(amounts);
   const artTemplate = recipe.artPattern ? latteArtTemplates[recipe.artPattern] : null;
   const cupLayers = ingredients.filter((ingredient) => amounts[ingredient.id] > 0);
@@ -73,12 +83,14 @@ export default function CoffeeSimulatorGame() {
   }
 
   function resetGame() {
-    setRecipe(getRandomRecipe(recipe.id));
+    setOrder(createRandomOrder(recipe.id));
     setAmounts(emptyAmounts);
     setStroke([]);
     setResult(null);
     setServedCount(0);
     setTotalScore(0);
+    setSelectedSweetness('half');
+    setSelectedTemperature('hot');
     setIsDrawing(false);
   }
 
@@ -87,7 +99,7 @@ export default function CoffeeSimulatorGame() {
       return;
     }
 
-    const nextResult = scoreOrder(amounts, recipe, stroke);
+    const nextResult = scoreOrder(amounts, order, stroke, selectedSweetness, selectedTemperature);
     const nextTotalScore = totalScore + nextResult.finalScore;
     const nextServedCount = servedCount + 1;
     const nextAverageScore = Math.round(nextTotalScore / nextServedCount);
@@ -99,7 +111,9 @@ export default function CoffeeSimulatorGame() {
   }
 
   function nextOrder() {
-    setRecipe(getRandomRecipe(recipe.id));
+    setOrder(createRandomOrder(recipe.id));
+    setSelectedSweetness('half');
+    setSelectedTemperature('hot');
     clearCup();
   }
 
@@ -150,7 +164,7 @@ export default function CoffeeSimulatorGame() {
   return (
     <GameLayout
       title="咖啡模拟器"
-      description="扮演咖啡主理人，根据随机顾客菜单点选加入浓缩、牛奶、奶泡等原料；比例越接近配方得分越高。部分饮品还需要用鼠标完成拉花，图案越贴近样例越加分。"
+      description="扮演咖啡主理人，根据随机顾客菜单点选加入浓缩、牛奶、厚椰乳、鲜橙汁等原料，并匹配指定甜度和加冰/常温/热饮要求。部分饮品还需要用鼠标完成拉花。"
       actions={
         <button className="button" type="button" onClick={resetGame}>
           重新开店
@@ -161,7 +175,8 @@ export default function CoffeeSimulatorGame() {
           <section>
             <h2>评分规则</h2>
             <p>每杯目标容量为 {targetDrinkAmount} ml。系统会先按所有原料的百分比与菜单配方比较，再加入容量接近度。</p>
-            <p>需要拉花的饮品会额外比较你的鼠标轨迹与样例路径，最终分数为原料 70% + 拉花 30%。</p>
+            <p>顾客会随机指定甜度和加冰、常温或热饮。加冰订单会把冰块计入目标比例；甜度和温度会共同影响偏好得分。</p>
+            <p>需要拉花的饮品会额外比较你的鼠标轨迹与样例路径，并合入最终得分。</p>
           </section>
           <section>
             <h2>今日菜单</h2>
@@ -190,20 +205,41 @@ export default function CoffeeSimulatorGame() {
             <span>顾客：{recipe.customer}</span>
             <h2>{recipe.name}</h2>
             <p>{recipe.request}</p>
+            <div className={styles.orderSpecs} aria-label="顾客个性化要求">
+              <strong>甜度：{order.sweetness.label}</strong>
+              <strong>温度：{order.temperature.label}</strong>
+            </div>
           </div>
           <div className={styles.menuHint}>
             <strong>菜单提示</strong>
             <p>{recipe.hint}</p>
             <div className={styles.targetTags} aria-label="目标配方比例">
               {ingredients
-                .filter((ingredient) => recipe.target[ingredient.id] > 0)
+                .filter((ingredient) => targetAmounts[ingredient.id] > 0)
                 .map((ingredient) => (
                   <span key={ingredient.id}>
-                    {ingredient.shortName} {recipe.target[ingredient.id]}%
+                    {ingredient.shortName} {targetAmounts[ingredient.id]}%
                   </span>
                 ))}
             </div>
           </div>
+        </section>
+
+        <section className={styles.preferencePanel} aria-label="甜度和温度选择">
+          <PreferenceGroup
+            disabled={Boolean(result)}
+            label="选择甜度"
+            options={sweetnessOptions}
+            selectedId={selectedSweetness}
+            onSelect={(id) => setSelectedSweetness(id as SweetnessId)}
+          />
+          <PreferenceGroup
+            disabled={Boolean(result)}
+            label="选择温度"
+            options={temperatureOptions}
+            selectedId={selectedTemperature}
+            onSelect={(id) => setSelectedTemperature(id as TemperatureId)}
+          />
         </section>
 
         <section className={styles.workbench} aria-label="咖啡制作台">
@@ -242,7 +278,7 @@ export default function CoffeeSimulatorGame() {
                 ingredient={ingredient}
                 key={ingredient.id}
                 percent={getIngredientPercent(amounts, ingredient.id)}
-                target={recipe.target[ingredient.id]}
+                target={targetAmounts[ingredient.id]}
                 onAdd={(delta) => changeIngredientAmount(ingredient.id, delta)}
                 onClear={() => clearIngredient(ingredient.id)}
               />
@@ -297,7 +333,7 @@ export default function CoffeeSimulatorGame() {
                 <p className={styles.eyebrow}>Service</p>
                 <h2>准备出杯</h2>
                 <p>
-                  调整原料到接近菜单提示的比例，
+                  调整原料到接近菜单提示的比例，选好甜度和温度，
                   {artTemplate ? '完成拉花后点击出杯。' : '确认容量后即可出杯。'}
                 </p>
                 <button className="button" disabled={!canServe} type="button" onClick={serveCoffee}>
@@ -325,6 +361,48 @@ function ScoreCard({ label, value }: ScoreCardProps) {
     <div className={styles.scoreCard}>
       <span>{label}</span>
       <strong>{value}</strong>
+    </div>
+  );
+}
+
+type PreferenceOption = {
+  id: string;
+  label: string;
+  description: string;
+};
+
+type PreferenceGroupProps = {
+  disabled: boolean;
+  label: string;
+  options: PreferenceOption[];
+  selectedId: string;
+  onSelect: (id: string) => void;
+};
+
+function PreferenceGroup({
+  disabled,
+  label,
+  options,
+  selectedId,
+  onSelect,
+}: PreferenceGroupProps) {
+  return (
+    <div className={styles.preferenceGroup}>
+      <h2>{label}</h2>
+      <div className={styles.preferenceButtons}>
+        {options.map((option) => (
+          <button
+            className={option.id === selectedId ? styles.preferenceButtonActive : undefined}
+            disabled={disabled}
+            key={option.id}
+            type="button"
+            onClick={() => onSelect(option.id)}
+          >
+            <strong>{option.label}</strong>
+            <span>{option.description}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -419,6 +497,18 @@ function ResultSummary({ result, recipe, onNextOrder }: ResultSummaryProps) {
         <div>
           <dt>拉花得分</dt>
           <dd>{result.artScore.required ? result.artScore.score : '无需'}</dd>
+        </div>
+        <div>
+          <dt>偏好得分</dt>
+          <dd>{result.preferenceScore}</dd>
+        </div>
+        <div>
+          <dt>甜度</dt>
+          <dd>{result.sweetnessScore}</dd>
+        </div>
+        <div>
+          <dt>温度</dt>
+          <dd>{result.temperatureScore}</dd>
         </div>
       </dl>
       <p className={styles.feedbackLine}>

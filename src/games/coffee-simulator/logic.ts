@@ -1,4 +1,14 @@
-export type IngredientId = 'espresso' | 'milk' | 'foam' | 'water' | 'chocolate' | 'syrup';
+export type IngredientId =
+  | 'espresso'
+  | 'milk'
+  | 'foam'
+  | 'water'
+  | 'chocolate'
+  | 'syrup'
+  | 'coconutMilk'
+  | 'orangeJuice'
+  | 'blackTea'
+  | 'ice';
 
 export type Ingredient = {
   id: IngredientId;
@@ -34,6 +44,28 @@ export type CoffeeRecipe = {
   artPattern?: ArtPatternId;
 };
 
+export type SweetnessId = 'none' | 'light' | 'half' | 'standard' | 'extra';
+
+export type SweetnessPreference = {
+  id: SweetnessId;
+  label: string;
+  description: string;
+};
+
+export type TemperatureId = 'iced' | 'room' | 'hot';
+
+export type TemperaturePreference = {
+  id: TemperatureId;
+  label: string;
+  description: string;
+};
+
+export type CoffeeOrder = {
+  recipe: CoffeeRecipe;
+  sweetness: SweetnessPreference;
+  temperature: TemperaturePreference;
+};
+
 export type IngredientScoreDetail = {
   id: IngredientId;
   targetPercent: number;
@@ -60,6 +92,9 @@ export type OrderScore = {
   finalScore: number;
   ingredientScore: IngredientScore;
   artScore: LatteArtScore;
+  preferenceScore: number;
+  sweetnessScore: number;
+  temperatureScore: number;
   title: string;
   message: string;
 };
@@ -111,6 +146,34 @@ export const ingredients: Ingredient[] = [
     description: '补充甜感和香气，少量即可改变整体平衡。',
     color: '#f59e0b',
   },
+  {
+    id: 'coconutMilk',
+    name: '厚椰乳',
+    shortName: '椰乳',
+    description: '带来生椰香气和更轻盈的奶感，适合生椰拿铁。',
+    color: '#fef9c3',
+  },
+  {
+    id: 'orangeJuice',
+    name: '鲜橙汁',
+    shortName: '橙汁',
+    description: '提供酸甜果香，适合橙 C 美式这类清爽特调。',
+    color: '#fb923c',
+  },
+  {
+    id: 'blackTea',
+    name: '红茶底',
+    shortName: '红茶',
+    description: '增加茶香和回甘，可制作鸳鸯咖啡或茶咖特调。',
+    color: '#a16207',
+  },
+  {
+    id: 'ice',
+    name: '冰块',
+    shortName: '冰块',
+    description: '用于加冰订单。冰块会占用杯量，放多会稀释风味。',
+    color: '#e0f2fe',
+  },
 ];
 
 export const ingredientIds = ingredients.map((ingredient) => ingredient.id);
@@ -122,7 +185,25 @@ export const emptyAmounts: IngredientAmounts = {
   water: 0,
   chocolate: 0,
   syrup: 0,
+  coconutMilk: 0,
+  orangeJuice: 0,
+  blackTea: 0,
+  ice: 0,
 };
+
+export const sweetnessOptions: SweetnessPreference[] = [
+  { id: 'none', label: '无糖', description: '不额外增加甜味，突出咖啡本身。' },
+  { id: 'light', label: '三分糖', description: '轻微甜感，适合清爽型饮品。' },
+  { id: 'half', label: '五分糖', description: '甜度适中，甜感和咖啡味平衡。' },
+  { id: 'standard', label: '七分糖', description: '偏甜但仍保留咖啡和奶香。' },
+  { id: 'extra', label: '全糖', description: '甜感明显，适合甜品型咖啡。' },
+];
+
+export const temperatureOptions: TemperaturePreference[] = [
+  { id: 'iced', label: '加冰', description: '需要加入冰块，做成冷饮口感。' },
+  { id: 'room', label: '常温', description: '不加冰也不加热，保持温和口感。' },
+  { id: 'hot', label: '热饮', description: '热出杯，不应加入冰块。' },
+];
 
 export const latteArtTemplates: Record<ArtPatternId, LatteArtTemplate> = {
   heart: {
@@ -181,16 +262,13 @@ export const coffeeRecipes: CoffeeRecipe[] = [
     id: 'americano',
     name: '美式咖啡',
     customer: '赶早会的程序员',
-    request: '想要一杯清爽但咖啡味明显的美式。',
+    request: '想要一杯清爽但咖啡味明显的美式，按我说的温度和甜度来。',
     hint: '浓缩打底，热水占主要杯量，不需要拉花。',
-    target: {
+    target: createAmounts({
       espresso: 35,
       water: 60,
-      milk: 0,
       foam: 5,
-      chocolate: 0,
-      syrup: 0,
-    },
+    }),
   },
   {
     id: 'cafe-latte',
@@ -198,15 +276,55 @@ export const coffeeRecipes: CoffeeRecipe[] = [
     customer: '正在写手账的客人',
     request: '想要一杯顺滑温柔的拿铁，最好有爱心拉花。',
     hint: '牛奶比例最高，浓缩适中，顶部保留少量奶泡。',
-    target: {
+    target: createAmounts({
       espresso: 25,
       milk: 55,
       foam: 15,
-      water: 0,
-      chocolate: 0,
       syrup: 5,
-    },
+    }),
     artPattern: 'heart',
+  },
+  {
+    id: 'coconut-latte',
+    name: '生椰拿铁',
+    customer: '刚健身结束的客人',
+    request: '想要椰香明显、咖啡味不要丢的生椰拿铁。',
+    hint: '厚椰乳是主体，牛奶辅助顺滑，浓缩比例不能太低。',
+    target: createAmounts({
+      espresso: 24,
+      coconutMilk: 48,
+      milk: 16,
+      foam: 7,
+      syrup: 5,
+    }),
+    artPattern: 'heart',
+  },
+  {
+    id: 'orange-c-americano',
+    name: '橙 C 美式',
+    customer: '想要清爽果咖的客人',
+    request: '来一杯橙 C 美式，橙香要亮，咖啡也要能喝出来。',
+    hint: '鲜橙汁和热水拉开清爽感，浓缩负责尾段苦甜。',
+    target: createAmounts({
+      espresso: 28,
+      orangeJuice: 38,
+      water: 24,
+      syrup: 10,
+    }),
+  },
+  {
+    id: 'flat-white',
+    name: '馥芮白',
+    customer: '懂咖啡的通勤客',
+    request: '要一杯奶感细腻、咖啡味更集中的馥芮白。',
+    hint: '浓缩比例高于拿铁，牛奶细腻，奶泡只要薄薄一层。',
+    target: createAmounts({
+      espresso: 34,
+      milk: 56,
+      foam: 8,
+      syrup: 2,
+    }),
+    artPattern: 'rosetta',
   },
   {
     id: 'cappuccino',
@@ -214,14 +332,12 @@ export const coffeeRecipes: CoffeeRecipe[] = [
     customer: '喜欢传统意式风味的常客',
     request: '要一杯奶泡厚实、比例均衡的卡布奇诺，图案要像树叶。',
     hint: '浓缩、牛奶、奶泡接近三分结构，奶泡略高。',
-    target: {
+    target: createAmounts({
       espresso: 30,
       milk: 35,
       foam: 30,
-      water: 0,
       chocolate: 5,
-      syrup: 0,
-    },
+    }),
     artPattern: 'rosetta',
   },
   {
@@ -230,14 +346,13 @@ export const coffeeRecipes: CoffeeRecipe[] = [
     customer: '刚下课的甜食爱好者',
     request: '想要巧克力味明显但不要太腻的摩卡，顶部可以做郁金香。',
     hint: '巧克力要存在感，牛奶和浓缩仍然是主体。',
-    target: {
+    target: createAmounts({
       espresso: 25,
       milk: 40,
       foam: 10,
-      water: 0,
       chocolate: 20,
       syrup: 5,
-    },
+    }),
     artPattern: 'tulip',
   },
   {
@@ -246,14 +361,84 @@ export const coffeeRecipes: CoffeeRecipe[] = [
     customer: '想犒劳自己的设计师',
     request: '要一杯香甜分层感强的焦糖玛奇朵，不必拉花。',
     hint: '糖浆偏多，牛奶和奶泡托住浓缩香气。',
-    target: {
+    target: createAmounts({
       espresso: 28,
       milk: 42,
       foam: 18,
-      water: 0,
-      chocolate: 0,
       syrup: 12,
-    },
+    }),
+  },
+  {
+    id: 'dirty',
+    name: 'Dirty',
+    customer: '喜欢层次感的摄影师',
+    request: '想喝冰牛奶托住热浓缩的 Dirty，层次要明显。',
+    hint: '牛奶占大头，浓缩直接覆盖在上层，奶泡和水都很少。',
+    target: createAmounts({
+      espresso: 32,
+      milk: 58,
+      foam: 4,
+      syrup: 6,
+    }),
+  },
+  {
+    id: 'sea-salt-cheese-latte',
+    name: '海盐芝士拿铁',
+    customer: '爱尝新品的学生',
+    request: '要一杯有咸甜奶盖感的海盐芝士拿铁，可以做郁金香。',
+    hint: '奶泡代表芝士奶盖口感，糖浆提供甜感，咖啡和牛奶保持平衡。',
+    target: createAmounts({
+      espresso: 24,
+      milk: 42,
+      foam: 24,
+      syrup: 10,
+    }),
+    artPattern: 'tulip',
+  },
+  {
+    id: 'yuanyang-coffee',
+    name: '鸳鸯咖啡',
+    customer: '下午犯困的编辑',
+    request: '想要咖啡和红茶都有存在感的鸳鸯咖啡。',
+    hint: '红茶底与牛奶形成茶咖基底，浓缩不要过低。',
+    target: createAmounts({
+      espresso: 24,
+      blackTea: 32,
+      milk: 32,
+      foam: 6,
+      syrup: 6,
+    }),
+  },
+  {
+    id: 'coconut-mocha',
+    name: '生椰摩卡',
+    customer: '想喝甜品咖啡的常客',
+    request: '巧克力和椰香都要明显，但不要完全盖住咖啡。',
+    hint: '厚椰乳与巧克力酱共同做主体，浓缩负责平衡甜感。',
+    target: createAmounts({
+      espresso: 24,
+      coconutMilk: 34,
+      chocolate: 20,
+      milk: 12,
+      foam: 6,
+      syrup: 4,
+    }),
+    artPattern: 'heart',
+  },
+  {
+    id: 'black-tea-latte',
+    name: '红茶拿铁咖啡',
+    customer: '想要茶香奶咖的客人',
+    request: '红茶香明显一点，咖啡只要做出尾韵就好。',
+    hint: '红茶底和牛奶占主要比例，浓缩做低比例点缀。',
+    target: createAmounts({
+      espresso: 18,
+      blackTea: 38,
+      milk: 34,
+      foam: 6,
+      syrup: 4,
+    }),
+    artPattern: 'rosetta',
   },
 ];
 
@@ -301,6 +486,13 @@ export function getIngredientPercent(amounts: IngredientAmounts, ingredientId: I
   return (amounts[ingredientId] / totalAmount) * 100;
 }
 
+export function createAmounts(partialAmounts: Partial<IngredientAmounts>): IngredientAmounts {
+  return {
+    ...emptyAmounts,
+    ...partialAmounts,
+  };
+}
+
 export function getRandomRecipe(previousRecipeId?: string) {
   const candidates = previousRecipeId
     ? coffeeRecipes.filter((recipe) => recipe.id !== previousRecipeId)
@@ -310,11 +502,40 @@ export function getRandomRecipe(previousRecipeId?: string) {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-export function scoreIngredients(amounts: IngredientAmounts, recipe: CoffeeRecipe): IngredientScore {
+export function createRandomOrder(previousRecipeId?: string): CoffeeOrder {
+  return {
+    recipe: getRandomRecipe(previousRecipeId),
+    sweetness: sweetnessOptions[Math.floor(Math.random() * sweetnessOptions.length)],
+    temperature: temperatureOptions[Math.floor(Math.random() * temperatureOptions.length)],
+  };
+}
+
+export function getOrderTarget(order: CoffeeOrder): IngredientAmounts {
+  const icePercent = order.temperature.id === 'iced' ? 12 : 0;
+  const baseScale = (100 - icePercent) / 100;
+  const target = ingredientIds.reduce<IngredientAmounts>((nextTarget, ingredientId) => {
+    if (ingredientId === 'ice') {
+      return {
+        ...nextTarget,
+        ice: icePercent,
+      };
+    }
+
+    return {
+      ...nextTarget,
+      [ingredientId]: Number((order.recipe.target[ingredientId] * baseScale).toFixed(1)),
+    };
+  }, { ...emptyAmounts });
+
+  return target;
+}
+
+export function scoreIngredients(amounts: IngredientAmounts, order: CoffeeOrder): IngredientScore {
   const totalAmount = getTotalAmount(amounts);
+  const targetAmounts = getOrderTarget(order);
   const details = ingredientIds.map((ingredientId) => {
     const actualPercent = getIngredientPercent(amounts, ingredientId);
-    const targetPercent = recipe.target[ingredientId];
+    const targetPercent = targetAmounts[ingredientId];
 
     return {
       id: ingredientId,
@@ -336,6 +557,33 @@ export function scoreIngredients(amounts: IngredientAmounts, recipe: CoffeeRecip
     totalAmount,
     details,
   };
+}
+
+export function scoreSweetness(selectedSweetness: SweetnessId, targetSweetness: SweetnessId) {
+  const selectedIndex = sweetnessOptions.findIndex((option) => option.id === selectedSweetness);
+  const targetIndex = sweetnessOptions.findIndex((option) => option.id === targetSweetness);
+
+  if (selectedIndex < 0 || targetIndex < 0) {
+    return 0;
+  }
+
+  const distance = Math.abs(selectedIndex - targetIndex);
+  return clampAmount(100 - distance * 32, 0, 100);
+}
+
+export function scoreTemperature(selectedTemperature: TemperatureId, targetTemperature: TemperatureId) {
+  if (selectedTemperature === targetTemperature) {
+    return 100;
+  }
+
+  if (
+    (selectedTemperature === 'room' && targetTemperature === 'hot')
+    || (selectedTemperature === 'hot' && targetTemperature === 'room')
+  ) {
+    return 55;
+  }
+
+  return 15;
 }
 
 export function createPathData(points: StrokePoint[]) {
@@ -384,22 +632,30 @@ export function scoreLatteArt(stroke: StrokePoint[], patternId?: ArtPatternId): 
 
 export function scoreOrder(
   amounts: IngredientAmounts,
-  recipe: CoffeeRecipe,
+  order: CoffeeOrder,
   stroke: StrokePoint[],
+  selectedSweetness: SweetnessId,
+  selectedTemperature: TemperatureId,
 ): OrderScore {
-  const ingredientScore = scoreIngredients(amounts, recipe);
-  const artScore = scoreLatteArt(stroke, recipe.artPattern);
+  const ingredientScore = scoreIngredients(amounts, order);
+  const artScore = scoreLatteArt(stroke, order.recipe.artPattern);
+  const sweetnessScore = scoreSweetness(selectedSweetness, order.sweetness.id);
+  const temperatureScore = scoreTemperature(selectedTemperature, order.temperature.id);
+  const preferenceScore = Math.round(sweetnessScore * 0.45 + temperatureScore * 0.55);
   const finalScore = artScore.required
-    ? Math.round(ingredientScore.score * 0.7 + artScore.score * 0.3)
-    : ingredientScore.score;
+    ? Math.round(ingredientScore.score * 0.58 + artScore.score * 0.27 + preferenceScore * 0.15)
+    : Math.round(ingredientScore.score * 0.8 + preferenceScore * 0.2);
   const title = getFinalScoreTitle(finalScore);
 
   return {
     finalScore,
     ingredientScore,
     artScore,
+    preferenceScore,
+    sweetnessScore,
+    temperatureScore,
     title,
-    message: getFinalScoreMessage(finalScore, ingredientScore.score, artScore),
+    message: getFinalScoreMessage(finalScore, ingredientScore.score, artScore, preferenceScore),
   };
 }
 
@@ -491,7 +747,12 @@ function getFinalScoreTitle(score: number) {
   return '需要返工';
 }
 
-function getFinalScoreMessage(score: number, ingredientScore: number, artScore: LatteArtScore) {
+function getFinalScoreMessage(
+  score: number,
+  ingredientScore: number,
+  artScore: LatteArtScore,
+  preferenceScore: number,
+) {
   if (score >= 90) {
     return '比例和呈现都很接近菜单要求，这杯可以放进招牌推荐。';
   }
@@ -502,6 +763,10 @@ function getFinalScoreMessage(score: number, ingredientScore: number, artScore: 
 
   if (artScore.required && artScore.score < 60) {
     return '味道已经接近，拉花还需要更贴近样例线条。';
+  }
+
+  if (preferenceScore < 60) {
+    return '饮品主体不错，但甜度或温度没有贴合顾客要求。';
   }
 
   if (score >= 75) {
