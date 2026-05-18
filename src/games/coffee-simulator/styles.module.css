@@ -159,6 +159,89 @@
   font-weight: 800;
 }
 
+.orderSpecs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.orderSpecs strong {
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  color: #fff7ed;
+  background: #b45309;
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.preferencePanel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.preferenceGroup {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem;
+  border: 1px solid rgba(180, 83, 9, 0.18);
+  border-radius: 1.35rem;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-card);
+}
+
+.preferenceGroup h2 {
+  margin: 0;
+  color: #7c2d12;
+  font-size: 1.05rem;
+}
+
+.preferenceButtons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.8rem, 1fr));
+  gap: 0.55rem;
+}
+
+.preferenceButtons button {
+  display: grid;
+  gap: 0.24rem;
+  min-height: 4.8rem;
+  padding: 0.7rem;
+  border: 1px solid rgba(180, 83, 9, 0.18);
+  border-radius: 0.95rem;
+  color: #78350f;
+  background: #fffbeb;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease,
+    opacity 160ms ease;
+}
+
+.preferenceButtons button:hover:not(:disabled),
+.preferenceButtonActive {
+  border-color: #b45309 !important;
+  box-shadow: 0 12px 28px rgba(180, 83, 9, 0.14);
+  transform: translateY(-1px);
+}
+
+.preferenceButtons button:disabled {
+  cursor: default;
+  opacity: 0.58;
+}
+
+.preferenceButtons strong {
+  font-weight: 950;
+}
+
+.preferenceButtons span {
+  color: var(--color-muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
 .workbench {
   display: grid;
   grid-template-columns: minmax(16rem, 0.8fr) minmax(0, 1.2fr);
@@ -616,6 +699,7 @@
 @media (max-width: 980px) {
   .scoreboard,
   .orderBoard,
+  .preferencePanel,
   .workbench,
   .artAndResult {
     grid-template-columns: 1fr;
