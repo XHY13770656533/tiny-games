@@ -13,6 +13,17 @@ export const games: GameMeta[] = [
     accentColor: '#b45309',
   },
   {
+    id: 'stone-skipping',
+    title: '打水漂模拟器',
+    description: '第一人称挑选随机石头，调整入水角、力度和转速，用近似物理模型挑战最长水漂轨迹。',
+    path: '/games/stone-skipping',
+    category: 'casual',
+    difficulty: 'medium',
+    status: 'available',
+    tags: ['物理', '第一人称', '调参', '模拟'],
+    accentColor: '#0f766e',
+  },
+  {
     id: 'summon-monsters',
     title: '召唤怪物',
     description: '扮演邪恶魔法师，在限时内输入中文咒语召唤怪物，组建军团自动迎战进攻的勇者。',

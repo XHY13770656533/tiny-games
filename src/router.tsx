@@ -13,6 +13,7 @@ import BreakoutGame from './games/breakout';
 import CoffeeSimulatorGame from './games/coffee-simulator';
 import LuckyWheelGame from './games/lucky-wheel';
 import SummonMonstersGame from './games/summon-monsters';
+import StoneSkippingGame from './games/stone-skipping';
 
 export const router = createBrowserRouter([
   {
@@ -22,6 +23,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: 'games/coffee-simulator', element: <CoffeeSimulatorGame /> },
+      { path: 'games/stone-skipping', element: <StoneSkippingGame /> },
       { path: 'games/summon-monsters', element: <SummonMonstersGame /> },
       { path: 'games/pony-river', element: <PonyRiverGame /> },
       { path: 'games/electronic-pet', element: <ElectronicPetGame /> },
