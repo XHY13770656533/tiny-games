@@ -2,6 +2,17 @@ import type { GameMeta } from '../types/game';
 
 export const games: GameMeta[] = [
   {
+    id: 'coffee-simulator',
+    title: '咖啡模拟器',
+    description: '扮演咖啡主理人，按顾客随机菜单点选原料、控制比例，并用鼠标完成指定拉花。',
+    path: '/games/coffee-simulator',
+    category: 'casual',
+    difficulty: 'medium',
+    status: 'available',
+    tags: ['咖啡', '经营', '配方', '鼠标拉花'],
+    accentColor: '#b45309',
+  },
+  {
     id: 'summon-monsters',
     title: '召唤怪物',
     description: '扮演邪恶魔法师，在限时内输入中文咒语召唤怪物，组建军团自动迎战进攻的勇者。',
