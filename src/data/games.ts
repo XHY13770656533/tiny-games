@@ -2,6 +2,17 @@ import type { GameMeta } from '../types/game';
 
 export const games: GameMeta[] = [
   {
+    id: 'coffee-simulator',
+    title: '咖啡模拟器',
+    description: '扮演咖啡主理人，按顾客随机菜单点选原料、控制比例，并用鼠标完成指定拉花。',
+    path: '/games/coffee-simulator',
+    category: 'casual',
+    difficulty: 'medium',
+    status: 'available',
+    tags: ['咖啡', '经营', '配方', '鼠标拉花'],
+    accentColor: '#b45309',
+  },
+  {
     id: 'stone-skipping',
     title: '打水漂模拟器',
     description: '第一人称挑选随机石头，调整入水角、力度和转速，用近似物理模型挑战最长水漂轨迹。',
