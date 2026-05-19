@@ -1,20 +1,19 @@
 import type { CSSProperties, PointerEvent } from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import GameLayout from '../../components/GameLayout/GameLayout';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import {
-  clearIngredientAmount,
   coffeeRecipes,
   createRandomOrder,
   createPathData,
   emptyAmounts,
-  getIngredientPercent,
+  getExpectedSequence,
   getOrderTarget,
   getTotalAmount,
-  ingredientStep,
   ingredients,
   latteArtTemplates,
   maxDrinkAmount,
+  pourStepAmount,
   scoreOrder,
   sweetnessOptions,
   targetDrinkAmount,
@@ -24,6 +23,7 @@ import {
   type CoffeeRecipe,
   type Ingredient,
   type IngredientAmounts,
+  type IngredientId,
   type OrderScore,
   type StrokePoint,
   type SweetnessId,
@@ -32,10 +32,12 @@ import {
 import styles from './styles.module.css';
 
 const highScoreKey = 'tiny-games:coffee-simulator:high-score';
+const pourIntervalMs = 110;
 
 export default function CoffeeSimulatorGame() {
   const [order, setOrder] = useState<CoffeeOrder>(() => createRandomOrder());
   const [amounts, setAmounts] = useState<IngredientAmounts>(emptyAmounts);
+  const amountsRef = useRef<IngredientAmounts>(emptyAmounts);
   const [stroke, setStroke] = useState<StrokePoint[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [result, setResult] = useState<OrderScore | null>(null);
@@ -43,10 +45,14 @@ export default function CoffeeSimulatorGame() {
   const [totalScore, setTotalScore] = useState(0);
   const [selectedSweetness, setSelectedSweetness] = useState<SweetnessId>('half');
   const [selectedTemperature, setSelectedTemperature] = useState<TemperatureId>('hot');
+  const [pourSequence, setPourSequence] = useState<IngredientId[]>([]);
+  const [pouringIngredientId, setPouringIngredientId] = useState<IngredientId | null>(null);
+  const pourTimerRef = useRef<number | null>(null);
   const [highScore, setHighScore] = useLocalStorage<number>(highScoreKey, 0);
 
   const recipe = order.recipe;
   const targetAmounts = useMemo(() => getOrderTarget(order), [order]);
+  const expectedSequence = useMemo(() => getExpectedSequence(order), [order]);
   const totalAmount = getTotalAmount(amounts);
   const artTemplate = recipe.artPattern ? latteArtTemplates[recipe.artPattern] : null;
   const cupLayers = ingredients.filter((ingredient) => amounts[ingredient.id] > 0);
@@ -54,43 +60,40 @@ export default function CoffeeSimulatorGame() {
   const userPath = useMemo(() => createPathData(stroke), [stroke]);
   const guidePath = useMemo(() => createPathData(artTemplate?.points ?? []), [artTemplate]);
   const canServe = totalAmount > 0 && !result;
+  const volumeLabel = getVolumeLabel(totalAmount);
 
   const cupStyle = {
     '--fill-level': `${Math.min(100, (totalAmount / targetDrinkAmount) * 100)}%`,
   } as CSSProperties;
 
-  function changeIngredientAmount(ingredientId: Ingredient['id'], delta: number) {
-    if (result) {
-      return;
-    }
+  useEffect(() => {
+    amountsRef.current = amounts;
+  }, [amounts]);
 
-    setAmounts((currentAmounts) => updateIngredientAmount(currentAmounts, ingredientId, delta));
-  }
-
-  function clearIngredient(ingredientId: Ingredient['id']) {
-    if (result) {
-      return;
-    }
-
-    setAmounts((currentAmounts) => clearIngredientAmount(currentAmounts, ingredientId));
-  }
+  useEffect(() => () => stopPouring(), []);
 
   function clearCup() {
+    stopPouring();
     setAmounts(emptyAmounts);
+    amountsRef.current = emptyAmounts;
     setStroke([]);
     setResult(null);
+    setPourSequence([]);
     setIsDrawing(false);
   }
 
   function resetGame() {
+    stopPouring();
     setOrder(createRandomOrder(recipe.id));
     setAmounts(emptyAmounts);
+    amountsRef.current = emptyAmounts;
     setStroke([]);
     setResult(null);
     setServedCount(0);
     setTotalScore(0);
     setSelectedSweetness('half');
     setSelectedTemperature('hot');
+    setPourSequence([]);
     setIsDrawing(false);
   }
 
@@ -99,7 +102,8 @@ export default function CoffeeSimulatorGame() {
       return;
     }
 
-    const nextResult = scoreOrder(amounts, order, stroke, selectedSweetness, selectedTemperature);
+    stopPouring();
+    const nextResult = scoreOrder(amounts, order, stroke, selectedSweetness, selectedTemperature, pourSequence);
     const nextTotalScore = totalScore + nextResult.finalScore;
     const nextServedCount = servedCount + 1;
     const nextAverageScore = Math.round(nextTotalScore / nextServedCount);
@@ -111,10 +115,52 @@ export default function CoffeeSimulatorGame() {
   }
 
   function nextOrder() {
+    stopPouring();
     setOrder(createRandomOrder(recipe.id));
     setSelectedSweetness('half');
     setSelectedTemperature('hot');
     clearCup();
+  }
+
+  function pourIngredient(ingredientId: IngredientId, shouldRecord = false) {
+    const currentAmounts = amountsRef.current;
+    const nextAmounts = updateIngredientAmount(currentAmounts, ingredientId, pourStepAmount);
+
+    if (nextAmounts[ingredientId] === currentAmounts[ingredientId]) {
+      return;
+    }
+
+    amountsRef.current = nextAmounts;
+    setAmounts(nextAmounts);
+
+    if (shouldRecord) {
+      setPourSequence((currentSequence) => (
+        currentSequence[currentSequence.length - 1] === ingredientId
+          ? currentSequence
+          : [...currentSequence, ingredientId]
+      ));
+    }
+  }
+
+  function startPouring(ingredientId: IngredientId) {
+    if (result || pourTimerRef.current !== null) {
+      return;
+    }
+
+    pourIngredient(ingredientId, true);
+    setPouringIngredientId(ingredientId);
+    pourTimerRef.current = window.setInterval(() => {
+      pourIngredient(ingredientId);
+    }, pourIntervalMs);
+  }
+
+  function stopPouring() {
+    if (pourTimerRef.current !== null) {
+      window.clearInterval(pourTimerRef.current);
+      pourTimerRef.current = null;
+    }
+
+    setPouringIngredientId(null);
   }
 
   function clearArt() {
@@ -164,7 +210,7 @@ export default function CoffeeSimulatorGame() {
   return (
     <GameLayout
       title="咖啡模拟器"
-      description="扮演咖啡主理人，根据随机顾客菜单点选加入浓缩、牛奶、厚椰乳、鲜橙汁等原料，并匹配指定甜度和加冰/常温/热饮要求。部分饮品还需要用鼠标完成拉花。"
+      description="扮演咖啡主理人，根据随机顾客菜单按住按钮加入浓缩、牛奶、厚椰乳、鲜橙汁等原料，并匹配指定甜度、温度和制作顺序。部分饮品还需要用鼠标完成拉花。"
       actions={
         <button className="button" type="button" onClick={resetGame}>
           重新开店
@@ -176,6 +222,7 @@ export default function CoffeeSimulatorGame() {
             <h2>评分规则</h2>
             <p>每杯目标容量为 {targetDrinkAmount} ml。系统会先按所有原料的百分比与菜单配方比较，再加入容量接近度。</p>
             <p>顾客会随机指定甜度和加冰、常温或热饮。加冰订单会把冰块计入目标比例；甜度和温度会共同影响偏好得分。</p>
+            <p>原料需要按照菜单步骤加入。按住原料按钮开始倒入，松开鼠标停止；顺序错乱、漏步骤或加入无关原料都会扣分。</p>
             <p>需要拉花的饮品会额外比较你的鼠标轨迹与样例路径，并合入最终得分。</p>
           </section>
           <section>
@@ -197,7 +244,7 @@ export default function CoffeeSimulatorGame() {
           <ScoreCard label="当前杯数" value={`${servedCount} 杯`} />
           <ScoreCard label="平均分" value={servedCount > 0 ? `${averageScore}` : '待出杯'} />
           <ScoreCard label="最高记录" value={`${highScore}`} />
-          <ScoreCard label="当前容量" value={`${totalAmount} / ${targetDrinkAmount} ml`} />
+          <ScoreCard label="杯量观察" value={volumeLabel} />
         </section>
 
         <section className={styles.orderBoard} aria-label="顾客点单">
@@ -218,9 +265,17 @@ export default function CoffeeSimulatorGame() {
                 .filter((ingredient) => targetAmounts[ingredient.id] > 0)
                 .map((ingredient) => (
                   <span key={ingredient.id}>
-                    {ingredient.shortName} {targetAmounts[ingredient.id]}%
+                    {ingredient.shortName}
                   </span>
                 ))}
+            </div>
+            <div className={styles.sequenceGuide} aria-label="推荐制作步骤">
+              <strong>制作步骤</strong>
+              <ol>
+                {expectedSequence.map((ingredientId) => (
+                  <li key={ingredientId}>{getIngredientShortName(ingredientId)}</li>
+                ))}
+              </ol>
             </div>
           </div>
         </section>
@@ -260,7 +315,6 @@ export default function CoffeeSimulatorGame() {
                         '--ingredient-color': ingredient.color,
                         '--layer-size': amounts[ingredient.id],
                       } as CSSProperties}
-                      title={`${ingredient.name} ${amounts[ingredient.id]} ml`}
                     />
                   ))}
                 </div>
@@ -277,10 +331,10 @@ export default function CoffeeSimulatorGame() {
                 disabled={Boolean(result)}
                 ingredient={ingredient}
                 key={ingredient.id}
-                percent={getIngredientPercent(amounts, ingredient.id)}
                 target={targetAmounts[ingredient.id]}
-                onAdd={(delta) => changeIngredientAmount(ingredient.id, delta)}
-                onClear={() => clearIngredient(ingredient.id)}
+                isPouring={pouringIngredientId === ingredient.id}
+                onPourStart={() => startPouring(ingredient.id)}
+                onPourStop={stopPouring}
               />
             ))}
           </div>
@@ -333,8 +387,8 @@ export default function CoffeeSimulatorGame() {
                 <p className={styles.eyebrow}>Service</p>
                 <h2>准备出杯</h2>
                 <p>
-                  调整原料到接近菜单提示的比例，选好甜度和温度，
-                  {artTemplate ? '完成拉花后点击出杯。' : '确认容量后即可出杯。'}
+                  按菜单步骤长按加入原料，凭杯中变化判断比例，选好甜度和温度，
+                  {artTemplate ? '完成拉花后点击出杯。' : '确认杯量后即可出杯。'}
                 </p>
                 <button className="button" disabled={!canServe} type="button" onClick={serveCoffee}>
                   出杯评分
@@ -411,50 +465,64 @@ type IngredientControlProps = {
   amount: number;
   disabled: boolean;
   ingredient: Ingredient;
-  percent: number;
+  isPouring: boolean;
   target: number;
-  onAdd: (delta: number) => void;
-  onClear: () => void;
+  onPourStart: () => void;
+  onPourStop: () => void;
 };
 
 function IngredientControl({
   amount,
   disabled,
   ingredient,
-  percent,
+  isPouring,
   target,
-  onAdd,
-  onClear,
+  onPourStart,
+  onPourStop,
 }: IngredientControlProps) {
   const progressStyle = {
     '--ingredient-color': ingredient.color,
     '--ingredient-level': `${Math.min(100, (amount / maxDrinkAmount) * 100)}%`,
   } as CSSProperties;
+  const cardClassName = [
+    styles.ingredientCard,
+    isPouring ? styles.ingredientCardPouring : '',
+  ].filter(Boolean).join(' ');
 
   return (
-    <article className={styles.ingredientCard} style={progressStyle}>
+    <article className={cardClassName} style={progressStyle}>
       <div>
         <span className={styles.ingredientDot} />
         <h3>{ingredient.name}</h3>
         <p>{ingredient.description}</p>
       </div>
       <div className={styles.ingredientStats}>
-        <span>{amount} ml</span>
-        <span>当前 {Math.round(percent)}%</span>
-        <span>目标 {target}%</span>
+        <span>{getAmountLevelLabel(amount)}</span>
+        <span>{target > 0 ? '菜单需要' : '非配方原料'}</span>
       </div>
       <div className={styles.ingredientMeter} aria-hidden="true">
         <span />
       </div>
       <div className={styles.ingredientActions}>
-        <button disabled={disabled || amount <= 0} type="button" onClick={() => onAdd(-ingredientStep)}>
-          -{ingredientStep}
-        </button>
-        <button disabled={disabled} type="button" onClick={() => onAdd(ingredientStep)}>
-          +{ingredientStep}
-        </button>
-        <button disabled={disabled || amount <= 0} type="button" onClick={onClear}>
-          清零
+        <button
+          className={styles.pourButton}
+          disabled={disabled}
+          type="button"
+          onPointerCancel={onPourStop}
+          onPointerDown={(event) => {
+            event.currentTarget.setPointerCapture(event.pointerId);
+            onPourStart();
+          }}
+          onPointerLeave={onPourStop}
+          onPointerUp={(event) => {
+            if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+              event.currentTarget.releasePointerCapture(event.pointerId);
+            }
+
+            onPourStop();
+          }}
+        >
+          {isPouring ? '正在加入...' : '按住加入'}
         </button>
       </div>
     </article>
@@ -510,11 +578,19 @@ function ResultSummary({ result, recipe, onNextOrder }: ResultSummaryProps) {
           <dt>温度</dt>
           <dd>{result.temperatureScore}</dd>
         </div>
+        <div>
+          <dt>步骤</dt>
+          <dd>{result.sequenceScore}</dd>
+        </div>
       </dl>
       <p className={styles.feedbackLine}>
         {diffIngredient
           ? `${diffIngredient.shortName}偏差最大：目标 ${Math.round(biggestDiff.targetPercent)}%，当前 ${Math.round(biggestDiff.actualPercent)}%。`
           : `${recipe.name} 完成。`}
+      </p>
+      <p className={styles.feedbackLine}>
+        推荐步骤：
+        {result.expectedSequence.map((ingredientId) => getIngredientShortName(ingredientId)).join(' → ')}
       </p>
       {result.artScore.required ? <p className={styles.feedbackLine}>{result.artScore.message}</p> : null}
       <button className="button" type="button" onClick={onNextOrder}>
@@ -533,4 +609,48 @@ function getPointerPoint(event: PointerEvent<SVGSVGElement>): StrokePoint {
     x: Math.max(0, Math.min(100, x)),
     y: Math.max(0, Math.min(100, y)),
   };
+}
+
+function getIngredientShortName(ingredientId: IngredientId) {
+  return ingredients.find((ingredient) => ingredient.id === ingredientId)?.shortName ?? ingredientId;
+}
+
+function getAmountLevelLabel(amount: number) {
+  if (amount <= 0) {
+    return '尚未加入';
+  }
+
+  if (amount < 12) {
+    return '少量';
+  }
+
+  if (amount < 32) {
+    return '适中';
+  }
+
+  if (amount < 55) {
+    return '偏多';
+  }
+
+  return '很多';
+}
+
+function getVolumeLabel(totalAmount: number) {
+  if (totalAmount <= 0) {
+    return '空杯';
+  }
+
+  if (totalAmount < targetDrinkAmount * 0.55) {
+    return '偏少';
+  }
+
+  if (totalAmount < targetDrinkAmount * 0.9) {
+    return '接近半满';
+  }
+
+  if (totalAmount <= targetDrinkAmount * 1.12) {
+    return '接近标准';
+  }
+
+  return '偏满';
 }
