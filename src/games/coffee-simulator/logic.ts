@@ -41,6 +41,7 @@ export type CoffeeRecipe = {
   request: string;
   hint: string;
   target: IngredientAmounts;
+  sequence: IngredientId[];
   artPattern?: ArtPatternId;
 };
 
@@ -95,13 +96,15 @@ export type OrderScore = {
   preferenceScore: number;
   sweetnessScore: number;
   temperatureScore: number;
+  sequenceScore: number;
+  expectedSequence: IngredientId[];
   title: string;
   message: string;
 };
 
 export const targetDrinkAmount = 100;
 export const maxDrinkAmount = 140;
-export const ingredientStep = 5;
+export const pourStepAmount = 1;
 
 export const ingredients: Ingredient[] = [
   {
@@ -269,6 +272,7 @@ export const coffeeRecipes: CoffeeRecipe[] = [
       water: 60,
       foam: 5,
     }),
+    sequence: ['espresso', 'water', 'foam'],
   },
   {
     id: 'cafe-latte',
@@ -282,6 +286,7 @@ export const coffeeRecipes: CoffeeRecipe[] = [
       foam: 15,
       syrup: 5,
     }),
+    sequence: ['syrup', 'espresso', 'milk', 'foam'],
     artPattern: 'heart',
   },
   {
@@ -297,6 +302,7 @@ export const coffeeRecipes: CoffeeRecipe[] = [
       foam: 7,
       syrup: 5,
     }),
+    sequence: ['syrup', 'coconutMilk', 'milk', 'espresso', 'foam'],
     artPattern: 'heart',
   },
   {
@@ -311,6 +317,7 @@ export const coffeeRecipes: CoffeeRecipe[] = [
       water: 24,
       syrup: 10,
     }),
+    sequence: ['syrup', 'orangeJuice', 'water', 'espresso'],
   },
   {
     id: 'flat-white',
@@ -324,6 +331,7 @@ export const coffeeRecipes: CoffeeRecipe[] = [
       foam: 8,
       syrup: 2,
     }),
+    sequence: ['syrup', 'espresso', 'milk', 'foam'],
     artPattern: 'rosetta',
   },
   {
@@ -338,6 +346,7 @@ export const coffeeRecipes: CoffeeRecipe[] = [
       foam: 30,
       chocolate: 5,
     }),
+    sequence: ['espresso', 'milk', 'foam', 'chocolate'],
     artPattern: 'rosetta',
   },
   {
@@ -353,6 +362,7 @@ export const coffeeRecipes: CoffeeRecipe[] = [
       chocolate: 20,
       syrup: 5,
     }),
+    sequence: ['chocolate', 'syrup', 'espresso', 'milk', 'foam'],
     artPattern: 'tulip',
   },
   {
@@ -367,6 +377,7 @@ export const coffeeRecipes: CoffeeRecipe[] = [
       foam: 18,
       syrup: 12,
     }),
+    sequence: ['syrup', 'milk', 'foam', 'espresso'],
   },
   {
     id: 'dirty',
@@ -380,6 +391,7 @@ export const coffeeRecipes: CoffeeRecipe[] = [
       foam: 4,
       syrup: 6,
     }),
+    sequence: ['milk', 'syrup', 'espresso', 'foam'],
   },
   {
     id: 'sea-salt-cheese-latte',
@@ -393,6 +405,7 @@ export const coffeeRecipes: CoffeeRecipe[] = [
       foam: 24,
       syrup: 10,
     }),
+    sequence: ['syrup', 'espresso', 'milk', 'foam'],
     artPattern: 'tulip',
   },
   {
@@ -408,6 +421,7 @@ export const coffeeRecipes: CoffeeRecipe[] = [
       foam: 6,
       syrup: 6,
     }),
+    sequence: ['syrup', 'blackTea', 'milk', 'espresso', 'foam'],
   },
   {
     id: 'coconut-mocha',
@@ -423,6 +437,7 @@ export const coffeeRecipes: CoffeeRecipe[] = [
       foam: 6,
       syrup: 4,
     }),
+    sequence: ['chocolate', 'syrup', 'coconutMilk', 'espresso', 'milk', 'foam'],
     artPattern: 'heart',
   },
   {
@@ -438,6 +453,7 @@ export const coffeeRecipes: CoffeeRecipe[] = [
       foam: 6,
       syrup: 4,
     }),
+    sequence: ['syrup', 'blackTea', 'milk', 'espresso', 'foam'],
     artPattern: 'rosetta',
   },
 ];
@@ -466,13 +482,6 @@ export function updateIngredientAmount(
   return {
     ...amounts,
     [ingredientId]: clampAmount(allowedIngredientAmount, 0, maxDrinkAmount),
-  };
-}
-
-export function clearIngredientAmount(amounts: IngredientAmounts, ingredientId: IngredientId) {
-  return {
-    ...amounts,
-    [ingredientId]: 0,
   };
 }
 
@@ -528,6 +537,16 @@ export function getOrderTarget(order: CoffeeOrder): IngredientAmounts {
   }, { ...emptyAmounts });
 
   return target;
+}
+
+export function getExpectedSequence(order: CoffeeOrder): IngredientId[] {
+  const baseSequence = order.recipe.sequence.filter((ingredientId) => order.recipe.target[ingredientId] > 0);
+
+  if (order.temperature.id !== 'iced') {
+    return baseSequence;
+  }
+
+  return ['ice', ...baseSequence];
 }
 
 export function scoreIngredients(amounts: IngredientAmounts, order: CoffeeOrder): IngredientScore {
@@ -586,6 +605,37 @@ export function scoreTemperature(selectedTemperature: TemperatureId, targetTempe
   return 15;
 }
 
+export function scoreSequence(pourSequence: IngredientId[], order: CoffeeOrder) {
+  const expectedSequence = getExpectedSequence(order);
+  const compactSequence = pourSequence.filter((ingredientId, index) => ingredientId !== pourSequence[index - 1]);
+
+  if (expectedSequence.length === 0) {
+    return 100;
+  }
+
+  let nextSearchIndex = 0;
+  let matchedInOrder = 0;
+
+  for (const expectedIngredient of expectedSequence) {
+    const foundIndex = compactSequence.indexOf(expectedIngredient, nextSearchIndex);
+
+    if (foundIndex >= 0) {
+      matchedInOrder += 1;
+      nextSearchIndex = foundIndex + 1;
+    }
+  }
+
+  const missingCount = expectedSequence.filter((ingredientId) => !compactSequence.includes(ingredientId)).length;
+  const extraCount = compactSequence.filter((ingredientId) => !expectedSequence.includes(ingredientId)).length;
+  const revisitCount = compactSequence.length - new Set(compactSequence).size;
+  const orderLoss = (expectedSequence.length - matchedInOrder) * 18;
+  const missingLoss = missingCount * 15;
+  const extraLoss = extraCount * 12;
+  const revisitLoss = revisitCount * 6;
+
+  return clampAmount(100 - orderLoss - missingLoss - extraLoss - revisitLoss, 0, 100);
+}
+
 export function createPathData(points: StrokePoint[]) {
   if (points.length === 0) {
     return '';
@@ -636,15 +686,23 @@ export function scoreOrder(
   stroke: StrokePoint[],
   selectedSweetness: SweetnessId,
   selectedTemperature: TemperatureId,
+  pourSequence: IngredientId[],
 ): OrderScore {
   const ingredientScore = scoreIngredients(amounts, order);
   const artScore = scoreLatteArt(stroke, order.recipe.artPattern);
   const sweetnessScore = scoreSweetness(selectedSweetness, order.sweetness.id);
   const temperatureScore = scoreTemperature(selectedTemperature, order.temperature.id);
   const preferenceScore = Math.round(sweetnessScore * 0.45 + temperatureScore * 0.55);
+  const sequenceScore = scoreSequence(pourSequence, order);
+  const expectedSequence = getExpectedSequence(order);
   const finalScore = artScore.required
-    ? Math.round(ingredientScore.score * 0.58 + artScore.score * 0.27 + preferenceScore * 0.15)
-    : Math.round(ingredientScore.score * 0.8 + preferenceScore * 0.2);
+    ? Math.round(
+      ingredientScore.score * 0.52
+      + artScore.score * 0.25
+      + preferenceScore * 0.13
+      + sequenceScore * 0.1,
+    )
+    : Math.round(ingredientScore.score * 0.7 + preferenceScore * 0.18 + sequenceScore * 0.12);
   const title = getFinalScoreTitle(finalScore);
 
   return {
@@ -654,8 +712,10 @@ export function scoreOrder(
     preferenceScore,
     sweetnessScore,
     temperatureScore,
+    sequenceScore,
+    expectedSequence,
     title,
-    message: getFinalScoreMessage(finalScore, ingredientScore.score, artScore, preferenceScore),
+    message: getFinalScoreMessage(finalScore, ingredientScore.score, artScore, preferenceScore, sequenceScore),
   };
 }
 
@@ -752,6 +812,7 @@ function getFinalScoreMessage(
   ingredientScore: number,
   artScore: LatteArtScore,
   preferenceScore: number,
+  sequenceScore: number,
 ) {
   if (score >= 90) {
     return '比例和呈现都很接近菜单要求，这杯可以放进招牌推荐。';
@@ -767,6 +828,10 @@ function getFinalScoreMessage(
 
   if (preferenceScore < 60) {
     return '饮品主体不错，但甜度或温度没有贴合顾客要求。';
+  }
+
+  if (sequenceScore < 60) {
+    return '原料比例接近，但制作步骤顺序打乱了风味层次。';
   }
 
   if (score >= 75) {
