@@ -12,6 +12,7 @@ import MinesweeperGame from './games/minesweeper';
 import BreakoutGame from './games/breakout';
 import CoffeeSimulatorGame from './games/coffee-simulator';
 import LuckyWheelGame from './games/lucky-wheel';
+import MirrorFlyerGame from './games/mirror-flyer';
 import SummonMonstersGame from './games/summon-monsters';
 import StoneSkippingGame from './games/stone-skipping';
 
@@ -22,6 +23,7 @@ export const router = createBrowserRouter([
     errorElement: <NotFoundPage />,
     children: [
       { index: true, element: <HomePage /> },
+      { path: 'games/mirror-flyer', element: <MirrorFlyerGame /> },
       { path: 'games/coffee-simulator', element: <CoffeeSimulatorGame /> },
       { path: 'games/stone-skipping', element: <StoneSkippingGame /> },
       { path: 'games/summon-monsters', element: <SummonMonstersGame /> },
