@@ -2,6 +2,17 @@ import type { GameMeta } from '../types/game';
 
 export const games: GameMeta[] = [
   {
+    id: 'mirror-flyer',
+    title: '镜像飞侠',
+    description: '在上下轴对称的双世界中奔跑，跳过普通障碍，并翻转真实/镜像世界让影子穿过特殊相位门。',
+    path: '/games/mirror-flyer',
+    category: 'reflex',
+    difficulty: 'medium',
+    status: 'available',
+    tags: ['跑酷', '镜像', '跳跃', '翻转'],
+    accentColor: '#4f46e5',
+  },
+  {
     id: 'coffee-simulator',
     title: '咖啡模拟器',
     description: '扮演咖啡主理人，按顾客随机菜单点选原料、控制比例，并用鼠标完成指定拉花。',
