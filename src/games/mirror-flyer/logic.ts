@@ -33,17 +33,18 @@ export type MirrorFlyerState = {
 };
 
 export const runnerX = 18;
-export const runnerWidth = 5.8;
-export const jumpDurationMs = 780;
+export const runnerHitboxWidth = 4.2;
+export const obstacleHitboxInset = 1.25;
+export const jumpDurationMs = 880;
 export const obstacleStartX = 106;
 export const obstacleWidth = 5.6;
-export const normalClearance = 0.56;
+export const normalClearance = 0.38;
 
-const baseSpeed = 0.022;
-const maxSpeed = 0.038;
-const speedRampPerMs = 0.0000007;
-const minSpawnDelayMs = 1040;
-const maxSpawnDelayMs = 1680;
+const baseSpeed = 0.014;
+const maxSpeed = 0.04;
+const speedRampPerMs = 0.00000036;
+const minSpawnDelayMs = 1180;
+const maxSpawnDelayMs = 1880;
 
 export function createInitialState(): MirrorFlyerState {
   return {
@@ -147,7 +148,7 @@ export function getJumpHeight(jumpElapsedMs: number | null): number {
   }
 
   const progress = Math.min(1, Math.max(0, jumpElapsedMs / jumpDurationMs));
-  return Math.sin(progress * Math.PI);
+  return Math.sin(progress * Math.PI) ** 0.72;
 }
 
 export function getRoleForSide(realSide: WorldSide, side: WorldSide): RunnerRole {
@@ -225,7 +226,10 @@ function detectCrash(state: MirrorFlyerState): CrashInfo | null {
 }
 
 function isRunnerOverlapping(obstacle: Obstacle) {
-  const runnerLeft = runnerX - runnerWidth / 2;
-  const runnerRight = runnerX + runnerWidth / 2;
-  return obstacle.x < runnerRight && obstacle.x + obstacle.width > runnerLeft;
+  const runnerLeft = runnerX - runnerHitboxWidth / 2;
+  const runnerRight = runnerX + runnerHitboxWidth / 2;
+  const obstacleLeft = obstacle.x + obstacleHitboxInset;
+  const obstacleRight = obstacle.x + obstacle.width - obstacleHitboxInset;
+
+  return obstacleLeft < runnerRight && obstacleRight > runnerLeft;
 }
