@@ -56,8 +56,8 @@ export default function MirrorFlyerGame() {
   }, [game.obstacles, game.realSide]);
 
   const stageStyle = {
-    '--jump-offset': `${jumpHeight * 4.8}rem`,
-    '--stripe-speed': `${Math.max(0.5, 1.7 - game.speed * 30)}s`,
+    '--jump-offset': `${jumpHeight * 6.4}rem`,
+    '--stripe-speed': `${Math.max(0.48, 1.95 - game.speed * 30)}s`,
   } as CSSProperties;
 
   useEffect(() => {
