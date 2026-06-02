@@ -256,7 +256,6 @@ export function advanceEcosystem(
   const deltaSeconds = deltaMs / 1000;
   const currentAnimals = state.animals;
   const movedAnimals = currentAnimals.map((animal) => moveAnimal(animal, currentAnimals, deltaMs, deltaSeconds, random));
-  const animalsById = new Map(movedAnimals.map((animal) => [animal.id, animal]));
   const hpById = new Map(movedAnimals.map((animal) => [animal.id, animal.hp]));
   const hungerById = new Map(movedAnimals.map((animal) => [animal.id, animal.hungerMs]));
   const eatenById = new Map<number, SpeciesId>();
