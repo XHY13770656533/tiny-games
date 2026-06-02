@@ -1,20 +1,21 @@
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ChangeEvent } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import GameLayout from '../../components/GameLayout/GameLayout';
 import {
+  addAnimalAtRandom,
   advanceEcosystem,
+  animalProfiles,
   createInitialState,
   formatElapsedTime,
   getEcosystemMood,
-  getSafeSheepCount,
-  killRandomWolf,
+  getSpeciesCounts,
+  habitatLabels,
   meadowHeight,
   setEcosystemStatus,
-  sheepReproductionMs,
-  wolfStarveMs,
+  speciesOrder,
+  type Animal,
   type EcosystemState,
-  type Sheep,
-  type Wolf,
+  type SpeciesId,
 } from './logic';
 import styles from './styles.module.css';
 
@@ -22,11 +23,13 @@ const maxFrameDeltaMs = 64;
 
 export default function WolfSheepGame() {
   const [ecosystem, setEcosystem] = useState<EcosystemState>(() => createInitialState());
+  const [selectedSpeciesId, setSelectedSpeciesId] = useState<SpeciesId>('rabbit');
   const lastFrameTimeRef = useRef<number | null>(null);
 
-  const safeSheepCount = useMemo(() => getSafeSheepCount(ecosystem.sheep), [ecosystem.sheep]);
-  const mood = getEcosystemMood(ecosystem);
+  const counts = useMemo(() => getSpeciesCounts(ecosystem.animals), [ecosystem.animals]);
+  const selectedProfile = animalProfiles[selectedSpeciesId];
   const isRunning = ecosystem.status === 'running';
+  const mood = getEcosystemMood(ecosystem);
 
   useEffect(() => {
     if (!isRunning) {
@@ -61,18 +64,32 @@ export default function WolfSheepGame() {
     ));
   }
 
-  function handleKillWolf() {
-    setEcosystem((currentEcosystem) => killRandomWolf(currentEcosystem));
+  function handleSpeciesChange(event: ChangeEvent<HTMLSelectElement>) {
+    setSelectedSpeciesId(event.target.value as SpeciesId);
+  }
+
+  function handlePlaceAnimal() {
+    setEcosystem((currentEcosystem) => addAnimalAtRandom(currentEcosystem, selectedSpeciesId));
   }
 
   return (
     <GameLayout
-      title="狼吃羊"
-      description="观察一个固定草场里的捕食生态：白色小球是羊，灰色小球是狼。狼会主动追逐并吃掉羊，安全的羊会繁殖，吃到羊的狼会诞生新狼，长时间抓不到羊的狼会饿死。"
+      title="狼吃羊生态"
+      description="从狼与羊扩展出的多物种生态模拟。野兔、绵羊、梅花鹿、狐狸和灰狼拥有不同寿命、速度、体型、生命值、食物和天敌，会自动捕食、觅食、逃离危险，并根据环境偏好繁殖。"
       actions={
         <>
-          <button className="button" type="button" onClick={handleKillWolf} disabled={ecosystem.wolves.length === 0}>
-            随机杀死一只狼
+          <label className={styles.speciesPicker}>
+            <span>投放物种</span>
+            <select value={selectedSpeciesId} onChange={handleSpeciesChange}>
+              {speciesOrder.map((speciesId) => (
+                <option key={speciesId} value={speciesId}>
+                  {animalProfiles[speciesId].name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button className="button" type="button" onClick={handlePlaceAnimal}>
+            随机投放{selectedProfile.name}
           </button>
           <button className={styles.secondaryButton} type="button" onClick={togglePause}>
             {isRunning ? '暂停观察' : '继续模拟'}
@@ -85,26 +102,31 @@ export default function WolfSheepGame() {
       aside={
         <div className={styles.asideContent}>
           <section>
-            <h2>生态规则</h2>
-            <ul>
-              <li>羊周围没有狼时进入安全状态，安全计时满 {(sheepReproductionMs / 1000).toFixed(1)} 秒会生出新羊。</li>
-              <li>狼会追逐最近的羊，吃掉羊后立刻刷新饥饿值，并在附近生出新狼。</li>
-              <li>狼超过 {(wolfStarveMs / 1000).toFixed(1)} 秒没有吃到羊就会饿死，羊不会饿死。</li>
-            </ul>
+            <h2>物种属性</h2>
+            <div className={styles.profileList}>
+              {speciesOrder.map((speciesId) => (
+                <SpeciesProfile key={speciesId} speciesId={speciesId} count={counts[speciesId]} />
+              ))}
+            </div>
           </section>
           <section>
-            <h2>玩家目标</h2>
-            <p>用“随机杀死一只狼”按钮干预狼群数量。狼太多会吃光羊，狼太少又会让羊快速扩张，尽量让两种数量长期共存。</p>
+            <h2>环境偏好</h2>
+            <p>树林、湖泊、丘陵和草地会影响动物的移动方向、觅食效率和繁殖进度。玩家只能选择物种，投放位置会随机生成。</p>
           </section>
         </div>
       }
     >
       <div className={styles.wrapper}>
         <section className={styles.dashboard} aria-label="生态统计">
-          <MetricCard label="羊群" value={String(ecosystem.sheep.length)} detail={`${safeSheepCount} 只处于安全状态`} />
-          <MetricCard label="狼群" value={String(ecosystem.wolves.length)} detail={`${ecosystem.wolvesKilledByPlayer} 只被玩家清除`} />
-          <MetricCard label="被吃掉的羊" value={String(ecosystem.sheepEaten)} detail={`新生狼 ${ecosystem.wolvesBorn} 只`} />
-          <MetricCard label="饿死的狼" value={String(ecosystem.wolvesStarved)} detail={`已模拟 ${formatElapsedTime(ecosystem.elapsedMs)}`} />
+          {speciesOrder.map((speciesId) => (
+            <MetricCard
+              key={speciesId}
+              label={animalProfiles[speciesId].name}
+              value={String(counts[speciesId])}
+              detail={`已投放 ${ecosystem.placed[speciesId]} / 新生 ${ecosystem.births[speciesId]}`}
+              speciesId={speciesId}
+            />
+          ))}
         </section>
 
         <section className={styles.statusPanel} aria-live="polite">
@@ -112,31 +134,28 @@ export default function WolfSheepGame() {
             {isRunning ? '模拟中' : '已暂停'}
           </span>
           <strong>{mood}</strong>
+          <small>
+            已模拟 {formatElapsedTime(ecosystem.elapsedMs)} · 捕食死亡 {ecosystem.deaths.predation} · 饥饿死亡 {ecosystem.deaths.starvation} · 自然死亡 {ecosystem.deaths.oldAge}
+          </small>
         </section>
 
-        <section className={styles.meadow} aria-label={`狼吃羊草场，当前有 ${ecosystem.sheep.length} 只羊和 ${ecosystem.wolves.length} 只狼`}>
-          <div className={styles.landscape} aria-hidden="true">
-            <span className={styles.treeOne} />
-            <span className={styles.treeTwo} />
-            <span className={styles.pond} />
+        <section className={styles.meadow} aria-label={`生态地图，当前共有 ${ecosystem.animals.length} 只动物`}>
+          <MapEnvironment />
+          {ecosystem.animals.map((animal) => (
+            <AnimalView key={animal.id} animal={animal} />
+          ))}
+        </section>
+
+        <section className={styles.legendPanel} aria-label="地图图例">
+          <EnvironmentLegend />
+          <div className={styles.eventPanel}>
+            <h2>最近事件</h2>
+            <ul>
+              {ecosystem.eventLog.map((event) => (
+                <li key={event}>{event}</li>
+              ))}
+            </ul>
           </div>
-
-          {ecosystem.sheep.map((sheep) => (
-            <SheepView key={sheep.id} sheep={sheep} />
-          ))}
-
-          {ecosystem.wolves.map((wolf) => (
-            <WolfView key={wolf.id} wolf={wolf} />
-          ))}
-        </section>
-
-        <section className={styles.eventPanel} aria-label="生态事件">
-          <h2>最近事件</h2>
-          <ul>
-            {ecosystem.eventLog.map((event) => (
-              <li key={event}>{event}</li>
-            ))}
-          </ul>
         </section>
       </div>
     </GameLayout>
@@ -147,11 +166,14 @@ type MetricCardProps = {
   label: string;
   value: string;
   detail: string;
+  speciesId: SpeciesId;
 };
 
-function MetricCard({ label, value, detail }: MetricCardProps) {
+function MetricCard({ label, value, detail, speciesId }: MetricCardProps) {
+  const profile = animalProfiles[speciesId];
+
   return (
-    <article className={styles.metricCard}>
+    <article className={styles.metricCard} style={{ '--species-color': profile.color } as CSSProperties}>
       <span>{label}</span>
       <strong>{value}</strong>
       <small>{detail}</small>
@@ -159,42 +181,127 @@ function MetricCard({ label, value, detail }: MetricCardProps) {
   );
 }
 
-function SheepView({ sheep }: { sheep: Sheep }) {
+function AnimalView({ animal }: { animal: Animal }) {
+  const profile = animalProfiles[animal.speciesId];
+  const hpRatio = Math.max(0, animal.hp / profile.maxHp);
+  const hungerRatio = Math.max(0, 1 - animal.hungerMs / profile.hungerLimitMs);
   const className = [
     styles.animal,
-    styles.sheep,
-    sheep.isSafe ? styles.safeSheep : styles.alertSheep,
+    styles[`animal-${animal.speciesId}`],
+    styles[`state-${animal.state}`],
   ].join(' ');
+  const style = {
+    '--x': `${animal.x}%`,
+    '--y': `${(animal.y / meadowHeight) * 100}%`,
+    '--animal-size': `${profile.size}rem`,
+    '--animal-color': profile.color,
+    '--hp-ratio': hpRatio.toFixed(2),
+    '--hunger-ratio': hungerRatio.toFixed(2),
+  } as CSSProperties;
 
   return (
     <span
       className={className}
-      style={getAnimalStyle(sheep)}
-      title={sheep.isSafe ? '安全羊：正在累积繁殖计时' : '危险羊：附近有狼'}
+      style={style}
+      title={`${profile.name} · ${getStateLabel(animal.state)} · 生命 ${Math.ceil(animal.hp)}/${profile.maxHp}`}
       aria-hidden="true"
     >
-      <span className={styles.safeRing} />
-    </span>
-  );
-}
-
-function WolfView({ wolf }: { wolf: Wolf }) {
-  const foodRatio = Math.max(0, 1 - wolf.hungerMs / wolfStarveMs);
-  const style = {
-    ...getAnimalStyle(wolf),
-    '--food-ratio': foodRatio.toFixed(2),
-  } as CSSProperties;
-
-  return (
-    <span className={[styles.animal, styles.wolf].join(' ')} style={style} title="狼：正在追逐最近的羊" aria-hidden="true">
+      <span className={styles.animalLabel}>{profile.shortName}</span>
+      <span className={styles.hpBar} />
       <span className={styles.hungerBar} />
     </span>
   );
 }
 
-function getAnimalStyle(animal: { x: number; y: number }) {
-  return {
-    '--x': `${animal.x}%`,
-    '--y': `${(animal.y / meadowHeight) * 100}%`,
-  } as CSSProperties;
+function SpeciesProfile({ speciesId, count }: { speciesId: SpeciesId; count: number }) {
+  const profile = animalProfiles[speciesId];
+  const preyText = profile.preySpecies.length > 0
+    ? profile.preySpecies.map((preyId) => animalProfiles[preyId].name).join('、')
+    : profile.foodHabitats.map((habitatId) => habitatLabels[habitatId]).join('、');
+  const predatorText = profile.predatorSpecies.length > 0
+    ? profile.predatorSpecies.map((predatorId) => animalProfiles[predatorId].name).join('、')
+    : '无';
+  const habitatText = Object.entries(profile.preferredHabitats)
+    .sort(([, scoreA], [, scoreB]) => scoreB - scoreA)
+    .map(([habitatId]) => habitatLabels[habitatId as keyof typeof habitatLabels])
+    .join('、');
+
+  return (
+    <article className={styles.profileCard} style={{ '--species-color': profile.color } as CSSProperties}>
+      <div>
+        <span>{profile.shortName}</span>
+        <strong>{profile.name}</strong>
+        <small>当前 {count} 只</small>
+      </div>
+      <p>{profile.description}</p>
+      <dl>
+        <div>
+          <dt>生命</dt>
+          <dd>{profile.maxHp}</dd>
+        </div>
+        <div>
+          <dt>速度</dt>
+          <dd>{profile.speed.toFixed(1)}</dd>
+        </div>
+        <div>
+          <dt>寿命</dt>
+          <dd>{(profile.lifespanMs / 1000).toFixed(0)} 秒</dd>
+        </div>
+        <div>
+          <dt>繁殖</dt>
+          <dd>{(profile.reproductionMs / 1000).toFixed(1)} 秒</dd>
+        </div>
+        <div>
+          <dt>食物</dt>
+          <dd>{preyText}</dd>
+        </div>
+        <div>
+          <dt>天敌</dt>
+          <dd>{predatorText}</dd>
+        </div>
+        <div>
+          <dt>环境</dt>
+          <dd>{habitatText}</dd>
+        </div>
+      </dl>
+    </article>
+  );
+}
+
+function MapEnvironment() {
+  return (
+    <div className={styles.environment} aria-hidden="true">
+      <span className={styles.forestWest}>树林</span>
+      <span className={styles.forestNorth}>树林</span>
+      <span className={styles.lake}>湖泊</span>
+      <span className={styles.hill}>丘陵</span>
+      <span className={styles.grassLabel}>草地</span>
+    </div>
+  );
+}
+
+function EnvironmentLegend() {
+  return (
+    <div className={styles.environmentLegend}>
+      <h2>环境</h2>
+      <ul>
+        <li><span className={styles.legendGrass} />草地：野兔、绵羊主要觅食地。</li>
+        <li><span className={styles.legendForest} />树林：鹿和狐狸更容易稳定生活。</li>
+        <li><span className={styles.legendLake} />湖泊：鹿会靠近取食，其他动物移动变慢。</li>
+        <li><span className={styles.legendHill} />丘陵：绵羊适应较好，其他动物略受影响。</li>
+      </ul>
+    </div>
+  );
+}
+
+function getStateLabel(state: Animal['state']) {
+  if (state === 'hunting') {
+    return '正在捕食';
+  }
+
+  if (state === 'fleeing') {
+    return '正在逃离天敌';
+  }
+
+  return '正在觅食';
 }

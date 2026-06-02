@@ -3,13 +3,13 @@ import type { GameMeta } from '../types/game';
 export const games: GameMeta[] = [
   {
     id: 'wolf-sheep',
-    title: '狼吃羊',
-    description: '在固定草场里观察狼群与羊群的捕食生态，用随机杀狼按钮维持数量平衡。',
+    title: '狼吃羊生态',
+    description: '在森林、湖泊、丘陵和草地中观察 5 种动物组成的食物链，并随机投放物种维持平衡。',
     path: '/games/wolf-sheep',
     category: 'strategy',
     difficulty: 'medium',
     status: 'available',
-    tags: ['生态', '模拟', '策略', '平衡'],
+    tags: ['生态', '食物链', '投放', '平衡'],
     accentColor: '#15803d',
   },
   {
