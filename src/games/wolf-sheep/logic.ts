@@ -1,4 +1,4 @@
-export type SpeciesId = 'rabbit' | 'sheep' | 'deer' | 'fox' | 'wolf';
+export type SpeciesId = 'rabbit' | 'sheep' | 'deer' | 'fox' | 'lynx' | 'wolf' | 'bear';
 export type HabitatId = 'grassland' | 'forest' | 'lake' | 'hill';
 export type AnimalState = 'foraging' | 'hunting' | 'fleeing';
 export type DeathCause = 'predation' | 'starvation' | 'oldAge';
@@ -72,7 +72,7 @@ type HabitatZone = {
 
 export const meadowWidth = 100;
 export const meadowHeight = 68;
-export const speciesOrder: SpeciesId[] = ['rabbit', 'sheep', 'deer', 'fox', 'wolf'];
+export const speciesOrder: SpeciesId[] = ['rabbit', 'sheep', 'deer', 'fox', 'lynx', 'wolf', 'bear'];
 
 export const habitatLabels: Record<HabitatId, string> = {
   grassland: '草地',
@@ -93,7 +93,7 @@ export const animalProfiles: Record<SpeciesId, AnimalProfile> = {
     id: 'rabbit',
     name: '野兔',
     shortName: '兔',
-    description: '繁殖最快的小型草食动物，喜欢草地和树林边缘，主要躲避狐狸与狼。',
+    description: '繁殖最快的小型草食动物，喜欢草地和树林边缘，主要躲避狐狸、猞猁与狼。',
     color: '#f8fafc',
     maxHp: 14,
     size: 0.86,
@@ -109,7 +109,7 @@ export const animalProfiles: Record<SpeciesId, AnimalProfile> = {
     initialCount: 14,
     populationLimit: 42,
     preySpecies: [],
-    predatorSpecies: ['fox', 'wolf'],
+    predatorSpecies: ['fox', 'lynx', 'wolf'],
     foodHabitats: ['grassland', 'forest'],
     preferredHabitats: { grassland: 1, forest: 0.72, hill: 0.32 },
   },
@@ -117,7 +117,7 @@ export const animalProfiles: Record<SpeciesId, AnimalProfile> = {
     id: 'sheep',
     name: '绵羊',
     shortName: '羊',
-    description: '稳定的草食动物，体型中等，喜欢开阔草地和丘陵，被狐狸与狼捕食。',
+    description: '稳定的草食动物，体型中等，喜欢开阔草地和丘陵，会被狐狸、猞猁、狼和棕熊捕食。',
     color: '#e2e8f0',
     maxHp: 28,
     size: 1.12,
@@ -133,7 +133,7 @@ export const animalProfiles: Record<SpeciesId, AnimalProfile> = {
     initialCount: 10,
     populationLimit: 34,
     preySpecies: [],
-    predatorSpecies: ['fox', 'wolf'],
+    predatorSpecies: ['fox', 'lynx', 'wolf', 'bear'],
     foodHabitats: ['grassland', 'hill'],
     preferredHabitats: { grassland: 1, hill: 0.78, lake: 0.22 },
   },
@@ -141,7 +141,7 @@ export const animalProfiles: Record<SpeciesId, AnimalProfile> = {
     id: 'deer',
     name: '梅花鹿',
     shortName: '鹿',
-    description: '生命值较高的草食动物，偏爱树林和湖边，繁殖慢，主要天敌是狼。',
+    description: '生命值较高的草食动物，偏爱树林和湖边，繁殖慢，主要天敌是狼和棕熊。',
     color: '#b45309',
     maxHp: 42,
     size: 1.34,
@@ -157,7 +157,7 @@ export const animalProfiles: Record<SpeciesId, AnimalProfile> = {
     initialCount: 6,
     populationLimit: 22,
     preySpecies: [],
-    predatorSpecies: ['wolf'],
+    predatorSpecies: ['wolf', 'bear'],
     foodHabitats: ['forest', 'lake'],
     preferredHabitats: { forest: 1, lake: 0.72, grassland: 0.42 },
   },
@@ -165,7 +165,7 @@ export const animalProfiles: Record<SpeciesId, AnimalProfile> = {
     id: 'fox',
     name: '狐狸',
     shortName: '狐',
-    description: '中型捕食者，擅长追捕野兔和落单绵羊，也会躲避狼，喜欢树林。',
+    description: '中型捕食者，擅长追捕野兔和落单绵羊，也会躲避猞猁、狼和棕熊，喜欢树林。',
     color: '#f97316',
     maxHp: 32,
     size: 1.05,
@@ -181,15 +181,39 @@ export const animalProfiles: Record<SpeciesId, AnimalProfile> = {
     initialCount: 3,
     populationLimit: 16,
     preySpecies: ['rabbit', 'sheep'],
-    predatorSpecies: ['wolf'],
+    predatorSpecies: ['lynx', 'wolf', 'bear'],
     foodHabitats: [],
     preferredHabitats: { forest: 1, grassland: 0.52, hill: 0.34 },
+  },
+  lynx: {
+    id: 'lynx',
+    name: '猞猁',
+    shortName: '猞',
+    description: '隐蔽的森林捕食者，会捕食野兔、狐狸和落单绵羊，但也会被狼和棕熊攻击。',
+    color: '#a16207',
+    maxHp: 40,
+    size: 1.22,
+    speed: 8.8,
+    fleeSpeed: 14.1,
+    attackDamage: 15,
+    visionRadius: 28,
+    fearRadius: 19,
+    lifespanMs: 108000,
+    hungerLimitMs: 19000,
+    reproductionMs: 12800,
+    maturityMs: 13800,
+    initialCount: 2,
+    populationLimit: 11,
+    preySpecies: ['rabbit', 'sheep', 'fox'],
+    predatorSpecies: ['wolf', 'bear'],
+    foodHabitats: [],
+    preferredHabitats: { forest: 1, hill: 0.58, grassland: 0.38 },
   },
   wolf: {
     id: 'wolf',
     name: '灰狼',
     shortName: '狼',
-    description: '顶级捕食者，能猎杀鹿、羊、狐狸和兔子，生命值高但繁殖较慢。',
+    description: '大型捕食者，能猎杀鹿、羊、狐狸、猞猁和兔子，也会避开更强的棕熊。',
     color: '#64748b',
     maxHp: 54,
     size: 1.42,
@@ -204,10 +228,34 @@ export const animalProfiles: Record<SpeciesId, AnimalProfile> = {
     maturityMs: 16000,
     initialCount: 2,
     populationLimit: 12,
-    preySpecies: ['rabbit', 'sheep', 'deer', 'fox'],
-    predatorSpecies: [],
+    preySpecies: ['rabbit', 'sheep', 'deer', 'fox', 'lynx'],
+    predatorSpecies: ['bear'],
     foodHabitats: [],
     preferredHabitats: { forest: 0.82, grassland: 0.64, hill: 0.45 },
+  },
+  bear: {
+    id: 'bear',
+    name: '棕熊',
+    shortName: '熊',
+    description: '最高阶的重型捕食者，行动较慢但生命值和攻击力很高，会捕食鹿、羊、狼、猞猁和狐狸。',
+    color: '#78350f',
+    maxHp: 78,
+    size: 1.78,
+    speed: 5.6,
+    fleeSpeed: 7.4,
+    attackDamage: 24,
+    visionRadius: 25,
+    fearRadius: 0,
+    lifespanMs: 136000,
+    hungerLimitMs: 26000,
+    reproductionMs: 19000,
+    maturityMs: 22000,
+    initialCount: 1,
+    populationLimit: 6,
+    preySpecies: ['sheep', 'deer', 'fox', 'lynx', 'wolf'],
+    predatorSpecies: [],
+    foodHabitats: [],
+    preferredHabitats: { forest: 0.86, lake: 0.72, hill: 0.52 },
   },
 };
 
@@ -446,7 +494,7 @@ export function getHabitatAt(point: Point): HabitatId {
 export function getEcosystemMood(state: EcosystemState) {
   const counts = getSpeciesCounts(state.animals);
   const herbivores = counts.rabbit + counts.sheep + counts.deer;
-  const predators = counts.fox + counts.wolf;
+  const predators = counts.fox + counts.lynx + counts.wolf + counts.bear;
 
   if (state.animals.length === 0) {
     return '地图已经没有动物，可以通过投放重新建立生态。';
@@ -635,7 +683,9 @@ function createSpeciesCounts(value = 0): SpeciesCounts {
     sheep: value,
     deer: value,
     fox: value,
+    lynx: value,
     wolf: value,
+    bear: value,
   };
 }
 

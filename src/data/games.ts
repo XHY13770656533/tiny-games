@@ -4,12 +4,12 @@ export const games: GameMeta[] = [
   {
     id: 'wolf-sheep',
     title: '狼吃羊生态',
-    description: '在森林、湖泊、丘陵和草地中观察 5 种动物组成的食物链，并随机投放物种维持平衡。',
+    description: '在森林、湖泊、丘陵和草地中观察 7 种动物组成的食物链，捕食者也会互相捕食。',
     path: '/games/wolf-sheep',
     category: 'strategy',
     difficulty: 'medium',
     status: 'available',
-    tags: ['生态', '食物链', '投放', '平衡'],
+    tags: ['生态', '食物链', '捕食者', '投放'],
     accentColor: '#15803d',
   },
   {
