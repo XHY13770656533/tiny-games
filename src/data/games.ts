@@ -4,7 +4,7 @@ export const games: GameMeta[] = [
   {
     id: 'wolf-sheep',
     title: '狼吃羊生态',
-    description: '在森林、湖泊、丘陵和草地中观察 7 种动物组成的食物链，捕食者也会互相捕食。',
+    description: '在无数量上限的地图中观察 7 种动物食物链：食肉动物会饿死，食草动物不会。',
     path: '/games/wolf-sheep',
     category: 'strategy',
     difficulty: 'medium',

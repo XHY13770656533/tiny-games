@@ -34,7 +34,6 @@ export type AnimalProfile = {
   reproductionMs: number;
   maturityMs: number;
   initialCount: number;
-  populationLimit: number;
   preySpecies: SpeciesId[];
   predatorSpecies: SpeciesId[];
   foodHabitats: HabitatId[];
@@ -107,7 +106,6 @@ export const animalProfiles: Record<SpeciesId, AnimalProfile> = {
     reproductionMs: 5200,
     maturityMs: 6400,
     initialCount: 14,
-    populationLimit: 42,
     preySpecies: [],
     predatorSpecies: ['fox', 'lynx', 'wolf'],
     foodHabitats: ['grassland', 'forest'],
@@ -131,7 +129,6 @@ export const animalProfiles: Record<SpeciesId, AnimalProfile> = {
     reproductionMs: 8600,
     maturityMs: 9800,
     initialCount: 10,
-    populationLimit: 34,
     preySpecies: [],
     predatorSpecies: ['fox', 'lynx', 'wolf', 'bear'],
     foodHabitats: ['grassland', 'hill'],
@@ -155,7 +152,6 @@ export const animalProfiles: Record<SpeciesId, AnimalProfile> = {
     reproductionMs: 13000,
     maturityMs: 15000,
     initialCount: 6,
-    populationLimit: 22,
     preySpecies: [],
     predatorSpecies: ['wolf', 'bear'],
     foodHabitats: ['forest', 'lake'],
@@ -179,7 +175,6 @@ export const animalProfiles: Record<SpeciesId, AnimalProfile> = {
     reproductionMs: 11200,
     maturityMs: 12500,
     initialCount: 3,
-    populationLimit: 16,
     preySpecies: ['rabbit', 'sheep'],
     predatorSpecies: ['lynx', 'wolf', 'bear'],
     foodHabitats: [],
@@ -203,7 +198,6 @@ export const animalProfiles: Record<SpeciesId, AnimalProfile> = {
     reproductionMs: 12800,
     maturityMs: 13800,
     initialCount: 2,
-    populationLimit: 11,
     preySpecies: ['rabbit', 'sheep', 'fox'],
     predatorSpecies: ['wolf', 'bear'],
     foodHabitats: [],
@@ -227,7 +221,6 @@ export const animalProfiles: Record<SpeciesId, AnimalProfile> = {
     reproductionMs: 14800,
     maturityMs: 16000,
     initialCount: 2,
-    populationLimit: 12,
     preySpecies: ['rabbit', 'sheep', 'deer', 'fox', 'lynx'],
     predatorSpecies: ['bear'],
     foodHabitats: [],
@@ -251,7 +244,6 @@ export const animalProfiles: Record<SpeciesId, AnimalProfile> = {
     reproductionMs: 19000,
     maturityMs: 22000,
     initialCount: 1,
-    populationLimit: 6,
     preySpecies: ['sheep', 'deer', 'fox', 'lynx', 'wolf'],
     predatorSpecies: [],
     foodHabitats: [],
@@ -379,7 +371,7 @@ export function advanceEcosystem(
       hungerMs,
     };
 
-    if (canReproduce(updatedAnimal, movedAnimals) && countSpecies([...survivingAnimals, ...bornAnimals], animal.speciesId) < profile.populationLimit) {
+    if (canReproduce(updatedAnimal, movedAnimals)) {
       const child = createAnimal(nextAnimalId, animal.speciesId, nearbyPoint(updatedAnimal, random), random);
       nextAnimalId += 1;
       births[animal.speciesId] += 1;
@@ -411,7 +403,7 @@ export function advanceEcosystem(
   const oldAgeDelta = deaths.oldAge - state.deaths.oldAge;
 
   if (starvationDelta > 0) {
-    events.push(`${starvationDelta} 只动物因为饥饿耗尽生命值。`);
+    events.push(`${starvationDelta} 只食肉动物因为缺少猎物而饿死。`);
   }
 
   if (oldAgeDelta > 0) {
@@ -435,14 +427,6 @@ export function addAnimalAtRandom(
   random: () => number = Math.random,
 ): EcosystemState {
   const profile = animalProfiles[speciesId];
-
-  if (countSpecies(state.animals, speciesId) >= profile.populationLimit) {
-    return {
-      ...state,
-      eventLog: addEvents(state.eventLog, state.elapsedMs, [`${profile.name}数量已接近地图承载上限，暂时无法继续投放。`]),
-    };
-  }
-
   const animal = createAnimal(state.nextAnimalId, speciesId, randomLandPoint(random), random);
 
   return {
@@ -513,7 +497,7 @@ export function getEcosystemMood(state: EcosystemState) {
   }
 
   if (herbivores > predators * 8) {
-    return '草食动物偏多，地图承载压力正在上升。';
+    return '草食动物偏多，种群会继续扩张，捕食者有更多猎物。';
   }
 
   return '食物链暂时保持动态平衡。';
@@ -585,12 +569,13 @@ function updateHunger(
   habitat: HabitatId,
   deltaMs: number,
 ) {
-  if (profile.preySpecies.length === 0 && profile.foodHabitats.includes(habitat)) {
-    return Math.max(0, animal.hungerMs - deltaMs * 1.45);
+  if (profile.preySpecies.length === 0) {
+    return profile.foodHabitats.includes(habitat)
+      ? Math.max(0, animal.hungerMs - deltaMs * 1.45)
+      : Math.min(profile.hungerLimitMs * 0.8, animal.hungerMs + deltaMs * 0.35);
   }
 
-  const hungerRate = profile.preySpecies.length > 0 ? 1 : 0.82;
-  return Math.min(profile.hungerLimitMs * 1.35, animal.hungerMs + deltaMs * hungerRate);
+  return Math.min(profile.hungerLimitMs * 1.35, animal.hungerMs + deltaMs);
 }
 
 function updateHp(
@@ -600,7 +585,7 @@ function updateHp(
   habitat: HabitatId,
   deltaSeconds: number,
 ) {
-  if (hungerMs >= profile.hungerLimitMs) {
+  if (profile.preySpecies.length > 0 && hungerMs >= profile.hungerLimitMs) {
     return animal.hp - starvationDamagePerSecond * deltaSeconds;
   }
 
@@ -814,10 +799,6 @@ function findNearestAnimal(
   }
 
   return nearest;
-}
-
-function countSpecies(animals: Animal[], speciesId: SpeciesId) {
-  return animals.filter((animal) => animal.speciesId === speciesId).length;
 }
 
 function isInsideEllipse(point: Point, zone: HabitatZone) {
