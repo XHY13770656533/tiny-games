@@ -45,7 +45,7 @@
 
 .dashboard {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(7.8rem, 1fr));
   gap: 0.7rem;
 }
 
@@ -258,7 +258,9 @@
 
 .animal-deer,
 .animal-fox,
-.animal-wolf {
+.animal-lynx,
+.animal-wolf,
+.animal-bear {
   color: #fff;
 }
 

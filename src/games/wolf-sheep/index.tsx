@@ -75,7 +75,7 @@ export default function WolfSheepGame() {
   return (
     <GameLayout
       title="狼吃羊生态"
-      description="从狼与羊扩展出的多物种生态模拟。野兔、绵羊、梅花鹿、狐狸和灰狼拥有不同寿命、速度、体型、生命值、食物和天敌，会自动捕食、觅食、逃离危险，并根据环境偏好繁殖。"
+      description="从狼与羊扩展出的多物种生态模拟。野兔、绵羊、梅花鹿、狐狸、猞猁、灰狼和棕熊拥有不同寿命、速度、体型、生命值、食物和天敌；捕食者之间也会互相捕食，食肉动物缺少猎物会饿死，食草动物不会饿死。"
       actions={
         <>
           <label className={styles.speciesPicker}>
@@ -135,7 +135,7 @@ export default function WolfSheepGame() {
           </span>
           <strong>{mood}</strong>
           <small>
-            已模拟 {formatElapsedTime(ecosystem.elapsedMs)} · 捕食死亡 {ecosystem.deaths.predation} · 饥饿死亡 {ecosystem.deaths.starvation} · 自然死亡 {ecosystem.deaths.oldAge}
+            已模拟 {formatElapsedTime(ecosystem.elapsedMs)} · 捕食死亡 {ecosystem.deaths.predation} · 食肉饥饿死亡 {ecosystem.deaths.starvation} · 自然死亡 {ecosystem.deaths.oldAge}
           </small>
         </section>
 
