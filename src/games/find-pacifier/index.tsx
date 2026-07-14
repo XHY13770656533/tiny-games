@@ -13,7 +13,6 @@ import {
   type InputVector,
   type Point,
   type Rect,
-  type SkillId,
   useHeldProp,
   useSkill,
 } from './logic';
