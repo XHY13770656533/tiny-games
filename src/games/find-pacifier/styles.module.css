@@ -3,9 +3,28 @@
   gap: 0.9rem;
 }
 
+.mapPicker {
+  display: grid;
+  gap: 0.2rem;
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.mapPicker select {
+  min-height: 2.75rem;
+  padding: 0 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.85rem;
+  color: var(--color-text);
+  background: #fff;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
 .hud {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 0.65rem;
 }
 
@@ -64,7 +83,7 @@
 
 .room {
   position: relative;
-  aspect-ratio: 100 / 64;
+  aspect-ratio: 100 / 72;
   min-height: 27rem;
   overflow: hidden;
   border: 0.48rem solid #825c48;
@@ -78,6 +97,30 @@
     0 1rem 2.5rem rgba(99, 64, 48, 0.12);
   touch-action: none;
   user-select: none;
+}
+
+.map-living {
+  background:
+    linear-gradient(90deg, rgba(70, 80, 63, 0.08) 1px, transparent 1px) 0 0 / 3.6rem 100%,
+    linear-gradient(0deg, rgba(70, 80, 63, 0.08) 1px, transparent 1px) 0 0 / 100% 3.6rem,
+    #e4ddc9;
+}
+
+.map-moon {
+  background:
+    radial-gradient(circle at 14% 18%, rgba(255, 255, 255, 0.45), transparent 10rem),
+    linear-gradient(135deg, rgba(99, 102, 241, 0.08) 25%, transparent 25%) 0 0 / 2.6rem 2.6rem,
+    #dce3f1;
+}
+
+.roomDark::after {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  content: '';
+  background: rgba(22, 29, 55, 0.58);
+  pointer-events: none;
+  animation: lightsOut 0.25s ease-out;
 }
 
 .wallTop {
@@ -222,14 +265,65 @@
     #e88975;
 }
 
+.furniture-screen {
+  border-radius: 0.35rem;
+  background:
+    repeating-linear-gradient(90deg, #d6b37a 0 28%, #8b6243 29% 33%),
+    #d6b37a;
+}
+
+.furniture-plant {
+  border-radius: 48%;
+  color: #14532d;
+  background: radial-gradient(circle, #86efac 0 22%, #22c55e 23% 55%, #166534 56%);
+}
+
 .roomProp,
 .floorEffect,
 .pacifier,
 .baby,
-.adult {
+.adult,
+.interaction {
   position: absolute;
   z-index: 7;
   transform: translate(-50%, -50%);
+}
+
+.interaction {
+  z-index: 8;
+  display: grid;
+  width: clamp(1.75rem, 4vw, 2.5rem);
+  height: clamp(1.75rem, 4vw, 2.5rem);
+  place-items: center;
+  border: 0.15rem solid #f59e0b;
+  border-radius: 0.65rem;
+  background: rgba(255, 251, 235, 0.92);
+  box-shadow: 0 0 0 0.3rem rgba(250, 204, 21, 0.2);
+  font-size: clamp(0.8rem, 2vw, 1.2rem);
+  animation: interactionGlow 1s ease-in-out infinite alternate;
+}
+
+.interaction small {
+  position: absolute;
+  right: -0.35rem;
+  bottom: -0.35rem;
+  display: grid;
+  min-width: 1rem;
+  height: 1rem;
+  place-items: center;
+  padding: 0 0.15rem;
+  border-radius: 999px;
+  color: #fff;
+  background: #d97706;
+  font-size: 0.52rem;
+  font-weight: 1000;
+}
+
+.interactionCooling {
+  border-color: #94a3b8;
+  filter: grayscale(0.8);
+  opacity: 0.7;
+  animation: none;
 }
 
 .roomProp {
@@ -315,6 +409,12 @@
   font-size: clamp(0.48rem, 1.2vw, 0.72rem);
   font-weight: 900;
   white-space: nowrap;
+}
+
+.babyHidden {
+  opacity: 0.42;
+  filter: sepia(0.4);
+  transform: translate(-50%, -50%) scale(0.72);
 }
 
 .adult {
@@ -480,12 +580,13 @@
 
 .skillControls {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.6rem;
 }
 
 .skillButton,
-.propButton {
+.propButton,
+.interactButton {
   display: grid;
   min-height: 5.2rem;
   gap: 0.08rem;
@@ -499,23 +600,27 @@
 }
 
 .skillButton > span,
-.propButton > span {
+.propButton > span,
+.interactButton > span {
   font-size: 1.4rem;
 }
 
 .skillButton strong,
-.propButton strong {
+.propButton strong,
+.interactButton strong {
   font-size: 0.82rem;
 }
 
 .skillButton small,
-.propButton small {
+.propButton small,
+.interactButton small {
   color: #9a7566;
   font-size: 0.65rem;
 }
 
 .skillButton:disabled,
-.propButton:disabled {
+.propButton:disabled,
+.interactButton:disabled {
   cursor: not-allowed;
   filter: grayscale(0.75);
   opacity: 0.58;
@@ -567,6 +672,14 @@
   to { transform: scale(1.025); }
 }
 
+@keyframes interactionGlow {
+  to { box-shadow: 0 0 0 0.5rem rgba(250, 204, 21, 0.28); }
+}
+
+@keyframes lightsOut {
+  from { opacity: 0; }
+}
+
 @media (max-width: 720px) {
   .hud {
     grid-template-columns: repeat(2, 1fr);
@@ -586,7 +699,7 @@
   }
 
   .skillControls {
-    grid-template-columns: repeat(3, minmax(4rem, 1fr));
+    grid-template-columns: repeat(4, minmax(3.8rem, 1fr));
   }
 }
 
@@ -601,7 +714,8 @@
   }
 
   .skillButton,
-  .propButton {
+  .propButton,
+  .interactButton {
     min-height: 4.5rem;
   }
 }
@@ -612,7 +726,8 @@
   .alert,
   .stars,
   .hudDanger,
-  .peeEffect {
+  .peeEffect,
+  .interaction {
     animation: none;
   }
 }

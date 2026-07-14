@@ -4,16 +4,21 @@ import GameLayout from '../../components/GameLayout/GameLayout';
 import {
   advanceGame,
   createInitialState,
-  furniture,
+  getInteractionIcon,
+  getInteractionLabel,
   getPropIcon,
   getPropLabel,
+  getRoomMap,
   roomHeight,
+  roomMaps,
   type Adult,
   type GameState,
   type InputVector,
+  type MapId,
   type Point,
   type Rect,
   useHeldProp,
+  useNearbyInteraction,
   useSkill,
 } from './logic';
 import styles from './styles.module.css';
@@ -78,8 +83,11 @@ export default function FindPacifierGame() {
       } else if (event.code === 'KeyE' || event.code === 'Space') {
         event.preventDefault();
         setGame((current) => useHeldProp(current));
+      } else if (event.code === 'KeyF') {
+        event.preventDefault();
+        setGame((current) => useNearbyInteraction(current));
       } else if (event.code === 'KeyR') {
-        resetGame();
+        setGame((current) => createInitialState(current.mapId));
       }
     }
 
@@ -115,11 +123,11 @@ export default function FindPacifierGame() {
     inputRef.current = { x, y };
   }
 
-  function resetGame() {
+  function resetGame(mapId: MapId = game.mapId) {
     activeDirectionsRef.current.clear();
     inputRef.current = { x: 0, y: 0 };
     lastFrameRef.current = null;
-    setGame(createInitialState());
+    setGame(createInitialState(mapId));
   }
 
   function handleDirectionStart(direction: keyof typeof directions) {
@@ -134,21 +142,31 @@ export default function FindPacifierGame() {
 
   const secondsLeft = Math.ceil(game.remainingMs / 1000);
   const danger = game.adults.some((adult) => adult.mood === 'chasing');
+  const roomMap = getRoomMap(game.mapId);
 
   return (
     <GameLayout
       title="找奶嘴"
       description="扮演偷偷溜出摇篮的婴儿，在限时内穿过家具重重的房间找到奶嘴。躲开大人的视线，用特殊技能和散落玩具争取逃跑机会。"
       actions={
-        <button className="button" type="button" onClick={resetGame}>
-          重新布置房间
-        </button>
+        <>
+          <label className={styles.mapPicker}>
+            <span>选择地图</span>
+            <select value={game.mapId} onChange={(event) => resetGame(event.target.value as MapId)}>
+              {roomMaps.map((map) => <option key={map.id} value={map.id}>{map.name}</option>)}
+            </select>
+          </label>
+          <button className="button" type="button" onClick={() => resetGame()}>
+            随机奶嘴重开
+          </button>
+        </>
       }
       aside={<GameGuide />}
     >
       <div className={styles.wrapper}>
         <section className={styles.hud} aria-label="游戏状态">
           <HudItem label="剩余时间" value={`${secondsLeft} 秒`} danger={secondsLeft <= 15} />
+          <HudItem label="当前地图" value={roomMap.name} />
           <HudItem label="大人数量" value={`${game.adults.length} 人`} />
           <HudItem label="被抓次数" value={`${game.captures} 次`} />
           <HudItem label="当前道具" value={game.heldProp ? `${getPropIcon(game.heldProp)} ${getPropLabel(game.heldProp)}` : '空手'} />
@@ -160,7 +178,11 @@ export default function FindPacifierGame() {
         </div>
 
         <section
-          className={styles.room}
+          className={[
+            styles.room,
+            styles[`map-${roomMap.className}`],
+            game.blackoutMs > 0 ? styles.roomDark : '',
+          ].join(' ')}
           aria-label={`俯视房间地图，剩余 ${secondsLeft} 秒，${game.message}`}
         >
           <div className={styles.wallTop} aria-hidden="true" />
@@ -168,7 +190,19 @@ export default function FindPacifierGame() {
           <div className={styles.window} aria-hidden="true"><span /><span /><span /></div>
           <div className={styles.door} aria-hidden="true">门</div>
 
-          {furniture.map((item) => <Furniture key={item.id} item={item} />)}
+          {roomMap.furniture.map((item) => <Furniture key={item.id} item={item} />)}
+
+          {game.interactions.map((interaction) => (
+            <span
+              key={interaction.id}
+              className={`${styles.interaction} ${interaction.cooldownMs > 0 ? styles.interactionCooling : ''}`}
+              style={positionStyle(interaction)}
+              title={`${getInteractionLabel(interaction.kind)}${interaction.cooldownMs > 0 ? '（恢复中）' : '（靠近按 F）'}`}
+            >
+              <span>{getInteractionIcon(interaction.kind)}</span>
+              <small>{interaction.cooldownMs > 0 ? Math.ceil(interaction.cooldownMs / 1000) : 'F'}</small>
+            </span>
+          ))}
 
           {game.props.filter((prop) => !prop.collected).map((prop) => (
             <span
@@ -199,7 +233,11 @@ export default function FindPacifierGame() {
 
           {game.adults.map((adult) => <AdultView key={adult.id} adult={adult} />)}
 
-          <span className={styles.baby} style={positionStyle(game.player)} aria-label="你操控的婴儿">
+          <span
+            className={`${styles.baby} ${game.hiddenMs > 0 ? styles.babyHidden : ''}`}
+            style={positionStyle(game.player)}
+            aria-label={game.hiddenMs > 0 ? '藏起来的婴儿' : '你操控的婴儿'}
+          >
             <span className={styles.babyTuft}>〰</span>
             <span className={styles.babyFace}>•ᴗ•</span>
           </span>
@@ -210,7 +248,7 @@ export default function FindPacifierGame() {
               <strong>{game.status === 'won' ? '奶嘴找到了！' : '寻找失败'}</strong>
               <p>{game.message}</p>
               <small>被大人捉住 {game.captures} 次</small>
-              <button className="button" type="button" onClick={resetGame}>再玩一次</button>
+              <button className="button" type="button" onClick={() => resetGame()}>再玩一次</button>
             </div>
           ) : null}
         </section>
@@ -241,6 +279,16 @@ export default function FindPacifierGame() {
               <span>{game.heldProp ? getPropIcon(game.heldProp) : '🧸'}</span>
               <strong>{game.heldProp ? `使用${getPropLabel(game.heldProp)}` : '寻找玩具'}</strong>
               <small>E / 空格</small>
+            </button>
+            <button
+              className={styles.interactButton}
+              type="button"
+              disabled={game.hiddenMs > 0}
+              onClick={() => setGame((current) => useNearbyInteraction(current))}
+            >
+              <span>✨</span>
+              <strong>{game.hiddenMs > 0 ? `藏身 ${(game.hiddenMs / 1000).toFixed(1)} 秒` : '场景互动'}</strong>
+              <small>靠近设施 · F</small>
             </button>
           </div>
         </section>
@@ -358,7 +406,7 @@ function GameGuide() {
       </section>
       <section>
         <h2>躲避大人</h2>
-        <p>家具能挡住视线。大人发现你后会加速追赶，被碰到会回到摇篮并损失 5 秒。</p>
+        <p>家具能挡住视线。大人会随机巡视，发现你后会加速追赶，被碰到会回到摇篮并损失 5 秒。</p>
       </section>
       <section>
         <h2>逃跑手段</h2>
@@ -367,6 +415,15 @@ function GameGuide() {
           <li><b>💦 撒尿：</b>制造湿滑区域，让大人短暂滑倒。</li>
           <li><b>🪇 场景玩具：</b>靠近自动拾取，使用后把大人引向声源。</li>
         </ul>
+      </section>
+      <section>
+        <h2>场景互动</h2>
+        <ul>
+          <li><b>🧺 衣篓：</b>短暂藏身，大人无法发现你。</li>
+          <li><b>💡 灯开关：</b>关灯后大人的视野明显缩短。</li>
+          <li><b>🎵 音乐盒：</b>把所有大人引向音乐声源。</li>
+        </ul>
+        <p>靠近设施按 F 或点击“场景互动”。每局地图与奶嘴位置相互独立，重开后奶嘴会随机出现在无碰撞区域。</p>
       </section>
     </div>
   );
