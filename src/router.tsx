@@ -16,6 +16,7 @@ import MirrorFlyerGame from './games/mirror-flyer';
 import SummonMonstersGame from './games/summon-monsters';
 import StoneSkippingGame from './games/stone-skipping';
 import WolfSheepGame from './games/wolf-sheep';
+import FindPacifierGame from './games/find-pacifier';
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +25,7 @@ export const router = createBrowserRouter([
     errorElement: <NotFoundPage />,
     children: [
       { index: true, element: <HomePage /> },
+      { path: 'games/find-pacifier', element: <FindPacifierGame /> },
       { path: 'games/wolf-sheep', element: <WolfSheepGame /> },
       { path: 'games/mirror-flyer', element: <MirrorFlyerGame /> },
       { path: 'games/coffee-simulator', element: <CoffeeSimulatorGame /> },

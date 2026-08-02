@@ -2,6 +2,17 @@ import type { GameMeta } from '../types/game';
 
 export const games: GameMeta[] = [
   {
+    id: 'find-pacifier',
+    title: '找奶嘴',
+    description: '扮演溜出摇篮的婴儿，在家具重重的房间里躲开大人追逐，利用技能和玩具限时找回奶嘴。',
+    path: '/games/find-pacifier',
+    category: 'reflex',
+    difficulty: 'medium',
+    status: 'available',
+    tags: ['潜行', '追逐', '俯视角', '限时'],
+    accentColor: '#e879a9',
+  },
+  {
     id: 'wolf-sheep',
     title: '狼吃羊生态',
     description: '在无数量上限的地图中观察 7 种动物食物链：食肉动物会饿死，食草动物不会。',
