@@ -15,12 +15,12 @@ export const games: GameMeta[] = [
   {
     id: 'mirror-flyer',
     title: '镜像飞侠',
-    description: '在上下轴对称的双世界中奔跑，跳过普通障碍，并翻转真实/镜像世界让影子穿过特殊相位门。',
+    description: '在上下轴对称的双世界中奔跑：实体拾金币、影子积能量，能量满后可冲刺无视障碍，并翻转世界让影子穿过相位门。',
     path: '/games/mirror-flyer',
     category: 'reflex',
     difficulty: 'medium',
     status: 'available',
-    tags: ['跑酷', '镜像', '跳跃', '翻转'],
+    tags: ['跑酷', '镜像', '跳跃', '翻转', '金币', '冲刺'],
     accentColor: '#4f46e5',
   },
   {
