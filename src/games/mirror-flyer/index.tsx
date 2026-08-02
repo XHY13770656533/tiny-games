@@ -4,15 +4,21 @@ import GameLayout from '../../components/GameLayout/GameLayout';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import {
   advanceRun,
+  canTriggerDash,
   createInitialState,
   flipWorld,
   getJumpHeight,
   getRoleForSide,
+  getShadowEnergyRatio,
+  isDashing,
+  maxShadowEnergy,
+  requestDash,
   requestJump,
   runnerX,
   startRun,
   type MirrorFlyerState,
   type Obstacle,
+  type Pickup,
   type RunnerRole,
   type WorldSide,
 } from './logic';
@@ -33,14 +39,39 @@ export default function MirrorFlyerGame() {
   const speedLabel = `${(game.speed * 1000).toFixed(1)}%/秒`;
   const realSideLabel = game.realSide === 'top' ? '上半场' : '下半场';
   const bestScore = Math.max(highScore, game.score);
+  const energyRatio = getShadowEnergyRatio(game.shadowEnergy);
+  const dashReady = canTriggerDash(game);
+  const dashing = isDashing(game);
 
   const upcomingHint = useMemo(() => {
+    if (dashing) {
+      return '暗影冲刺中：加速前进，并无视所有障碍。';
+    }
+
     const nextObstacle = game.obstacles
       .filter((obstacle) => obstacle.x + obstacle.width > runnerX)
       .sort((a, b) => a.x - b.x)[0];
+    const nextPickup = game.pickups
+      .filter((pickup) => pickup.x + pickup.width > runnerX)
+      .sort((a, b) => a.x - b.x)[0];
+
+    if (nextPickup && (!nextObstacle || nextPickup.x < nextObstacle.x)) {
+      const lane = nextPickup.side === 'top' ? '上方' : '下方';
+      const role = getRoleForSide(game.realSide, nextPickup.side);
+
+      if (nextPickup.type === 'coin') {
+        return role === 'entity'
+          ? `${lane}金币对准实体，直接冲过去拾取。`
+          : `${lane}金币在影子一侧，翻转后才能由实体拾取。`;
+      }
+
+      return role === 'shadow'
+        ? `${lane}暗影能量交给影子拾取，积攒冲刺条。`
+        : `${lane}暗影能量在实体一侧，翻转后交给影子吸收。`;
+    }
 
     if (!nextObstacle) {
-      return '观察上下两条路线，等待下一组障碍进入视野。';
+      return '观察上下两条路线，等待下一组障碍或拾取物进入视野。';
     }
 
     const role = getRoleForSide(game.realSide, nextObstacle.side);
@@ -53,11 +84,15 @@ export default function MirrorFlyerGame() {
     }
 
     return `${lane}普通路障接近，提前跳跃会让实体和影子同步越障。`;
-  }, [game.obstacles, game.realSide]);
+  }, [dashing, game.obstacles, game.pickups, game.realSide]);
 
   const stageStyle = {
     '--jump-offset': `${jumpHeight * 6.4}rem`,
-    '--stripe-speed': `${Math.max(0.48, 1.95 - game.speed * 30)}s`,
+    '--stripe-speed': `${Math.max(0.36, 1.95 - game.speed * 30)}s`,
+  } as CSSProperties;
+
+  const energyStyle = {
+    '--energy-ratio': String(dashing ? 1 : energyRatio),
   } as CSSProperties;
 
   useEffect(() => {
@@ -108,6 +143,12 @@ export default function MirrorFlyerGame() {
         return;
       }
 
+      if (event.code === 'KeyD' || event.code === 'ShiftLeft' || event.code === 'ShiftRight') {
+        event.preventDefault();
+        handleDash();
+        return;
+      }
+
       if (event.code === 'Enter') {
         event.preventDefault();
         setGame(startRun());
@@ -132,6 +173,10 @@ export default function MirrorFlyerGame() {
     setGame((currentGame) => flipWorld(currentGame));
   }
 
+  function handleDash() {
+    setGame((currentGame) => requestDash(currentGame));
+  }
+
   function resetGame() {
     setGame(createInitialState());
   }
@@ -139,7 +184,7 @@ export default function MirrorFlyerGame() {
   return (
     <GameLayout
       title="镜像飞侠"
-      description="在上下对称的双世界中奔跑。实体只受你的操作控制，影子会做出镜像动作；普通障碍需要同步跳过，特殊相位门只有影子能穿过。"
+      description="在上下对称的双世界中奔跑。实体拾取金币，影子吸收暗影能量；能量攒满后可主动冲刺，加速并无视障碍。"
       actions={
         <>
           <button className="button" type="button" onClick={() => setGame(startRun())}>
@@ -157,6 +202,7 @@ export default function MirrorFlyerGame() {
             <ul>
               <li>跳跃：空格、W、方向键上，或点击“跳跃”。</li>
               <li>翻转：F、S、方向键下，或点击“翻转世界”。</li>
+              <li>冲刺：D、Shift，或点击“暗影冲刺”（能量满时可用）。</li>
               <li>按 Enter 可以快速重新起跑。</li>
             </ul>
           </section>
@@ -165,6 +211,14 @@ export default function MirrorFlyerGame() {
             <p>
               初始上半场是真实世界，实体在上方奔跑；下半场是镜像世界，影子同步做出镜像跳跃。翻转后真实世界会交换到另一侧，实体和影子的身份也随之互换。
             </p>
+          </section>
+          <section>
+            <h2>拾取与冲刺</h2>
+            <ul>
+              <li>金色硬币：只可由实体拾取，增加得分。</li>
+              <li>紫色暗影能量：只可由影子吸收，填满能量条。</li>
+              <li>能量满后主动触发冲刺：短时加速，并无视所有障碍。</li>
+            </ul>
           </section>
           <section>
             <h2>障碍类型</h2>
@@ -179,12 +233,50 @@ export default function MirrorFlyerGame() {
       <div className={styles.wrapper}>
         <section className={styles.scoreboard} aria-label="镜像飞侠状态">
           <MetricCard label="状态" value={statusLabel} detail={upcomingHint} />
-          <MetricCard label="得分" value={String(game.score)} detail="存活越久分数越高" />
+          <MetricCard label="得分" value={String(game.score)} detail={`金币 ${game.coins} 枚 · 存活加分`} />
           <MetricCard label="最高分" value={String(bestScore)} detail="本地保存" />
           <MetricCard label="真实世界" value={realSideLabel} detail={`当前速度 ${speedLabel}`} />
         </section>
 
-        <section className={styles.stage} style={stageStyle} aria-label="镜像飞侠跑酷场景">
+        <section className={styles.energyPanel} style={energyStyle} aria-label="暗影能量">
+          <div className={styles.energyHeader}>
+            <span>暗影能量</span>
+            <strong>
+              {dashing
+                ? '冲刺中'
+                : dashReady
+                  ? '可冲刺'
+                  : `${Math.round(game.shadowEnergy)} / ${maxShadowEnergy}`}
+            </strong>
+          </div>
+          <div
+            className={[
+              styles.energyTrack,
+              dashReady ? styles.energyReady : '',
+              dashing ? styles.energyDashing : '',
+            ].join(' ')}
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={maxShadowEnergy}
+            aria-valuenow={dashing ? maxShadowEnergy : Math.round(game.shadowEnergy)}
+            aria-label="暗影能量累计条"
+          >
+            <div className={styles.energyFill} />
+          </div>
+          <p>
+            {dashing
+              ? '冲刺持续期间无视障碍，结束后能量重新累计。'
+              : dashReady
+                ? '能量已满，按 D / Shift 或点击下方按钮触发暗影冲刺。'
+                : '影子拾取紫色能量球可累计；实体负责捡金色硬币。'}
+          </p>
+        </section>
+
+        <section
+          className={[styles.stage, dashing ? styles.stageDashing : ''].join(' ')}
+          style={stageStyle}
+          aria-label="镜像飞侠跑酷场景"
+        >
           <WorldPanel side="top" role={topRole} />
           <WorldPanel side="bottom" role={bottomRole} />
           <div className={styles.axisLine} aria-hidden="true">
@@ -192,11 +284,15 @@ export default function MirrorFlyerGame() {
           </div>
 
           {game.obstacles.map((obstacle) => (
-            <ObstacleView key={obstacle.id} obstacle={obstacle} />
+            <ObstacleView key={obstacle.id} obstacle={obstacle} faded={dashing} />
           ))}
 
-          <Runner side="top" role={topRole} />
-          <Runner side="bottom" role={bottomRole} />
+          {game.pickups.map((pickup) => (
+            <PickupView key={pickup.id} pickup={pickup} />
+          ))}
+
+          <Runner side="top" role={topRole} dashing={dashing} />
+          <Runner side="bottom" role={bottomRole} dashing={dashing} />
 
           {game.status !== 'running' ? (
             <div className={styles.overlay} aria-live="polite">
@@ -217,6 +313,15 @@ export default function MirrorFlyerGame() {
           <button className={styles.controlButton} type="button" onClick={handleFlip} disabled={game.status !== 'running'}>
             <span>翻转世界</span>
             <small>F / S / ↓</small>
+          </button>
+          <button
+            className={[styles.controlButton, styles.dashButton, dashReady ? styles.dashReady : ''].join(' ')}
+            type="button"
+            onClick={handleDash}
+            disabled={!dashReady}
+          >
+            <span>{dashing ? '冲刺中' : '暗影冲刺'}</span>
+            <small>D / Shift</small>
           </button>
         </section>
       </div>
@@ -269,15 +374,17 @@ function WorldPanel({ side, role }: WorldPanelProps) {
 type RunnerProps = {
   side: WorldSide;
   role: RunnerRole;
+  dashing: boolean;
 };
 
-function Runner({ side, role }: RunnerProps) {
+function Runner({ side, role, dashing }: RunnerProps) {
   return (
     <div
       className={[
         styles.runner,
         side === 'top' ? styles.topRunner : styles.bottomRunner,
         role === 'entity' ? styles.entityRunner : styles.shadowRunner,
+        dashing ? styles.runnerDashing : '',
       ].join(' ')}
       aria-label={`${side === 'top' ? '上方' : '下方'}${role === 'entity' ? '实体' : '影子'}`}
     >
@@ -290,9 +397,10 @@ function Runner({ side, role }: RunnerProps) {
 
 type ObstacleViewProps = {
   obstacle: Obstacle;
+  faded: boolean;
 };
 
-function ObstacleView({ obstacle }: ObstacleViewProps) {
+function ObstacleView({ obstacle, faded }: ObstacleViewProps) {
   const isPhaseGate = obstacle.type === 'phaseGate';
   const style = {
     left: `${obstacle.x}%`,
@@ -305,11 +413,38 @@ function ObstacleView({ obstacle }: ObstacleViewProps) {
         styles.obstacle,
         obstacle.side === 'top' ? styles.topObstacle : styles.bottomObstacle,
         isPhaseGate ? styles.phaseGate : styles.barrier,
+        faded ? styles.obstacleFaded : '',
       ].join(' ')}
       style={style}
       aria-hidden="true"
     >
       <span>{isPhaseGate ? '相' : ''}</span>
+    </div>
+  );
+}
+
+type PickupViewProps = {
+  pickup: Pickup;
+};
+
+function PickupView({ pickup }: PickupViewProps) {
+  const isCoin = pickup.type === 'coin';
+  const style = {
+    left: `${pickup.x}%`,
+    width: `${pickup.width}%`,
+  };
+
+  return (
+    <div
+      className={[
+        styles.pickup,
+        pickup.side === 'top' ? styles.topPickup : styles.bottomPickup,
+        isCoin ? styles.coinPickup : styles.energyPickup,
+      ].join(' ')}
+      style={style}
+      aria-hidden="true"
+    >
+      <span>{isCoin ? '币' : '能'}</span>
     </div>
   );
 }
@@ -321,6 +456,10 @@ function getStatusLabel(game: MirrorFlyerState) {
 
   if (game.status === 'crashed') {
     return '失败';
+  }
+
+  if (isDashing(game)) {
+    return '冲刺中';
   }
 
   return '奔跑中';

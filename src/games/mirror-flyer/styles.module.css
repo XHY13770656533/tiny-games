@@ -363,10 +363,160 @@
   color: rgba(255, 255, 255, 0.82);
 }
 
+.energyPanel {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.95rem 1.05rem;
+  border: 1px solid color-mix(in srgb, #7c3aed 22%, var(--color-border));
+  border-radius: 1.2rem;
+  background:
+    linear-gradient(135deg, rgba(237, 233, 254, 0.92), rgba(255, 255, 255, 0.94));
+  box-shadow: 0 16px 40px rgba(76, 29, 149, 0.08);
+}
+
+.energyHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.energyHeader span {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.energyHeader strong {
+  color: #5b21b6;
+  font-size: 1.05rem;
+}
+
+.energyTrack {
+  position: relative;
+  overflow: hidden;
+  height: 0.95rem;
+  border: 1px solid rgba(91, 33, 182, 0.22);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.energyFill {
+  width: calc(var(--energy-ratio) * 100%);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #7c3aed, #a855f7 55%, #f0abfc);
+  box-shadow: inset 0 -0.2rem 0 rgba(15, 23, 42, 0.12);
+  transition: width 120ms linear;
+}
+
+.energyReady .energyFill {
+  animation: energyPulse 720ms ease-in-out infinite;
+}
+
+.energyDashing .energyFill {
+  width: 100%;
+  background: linear-gradient(90deg, #f97316, #fbbf24 48%, #fde68a);
+  animation: energyDash 360ms linear infinite;
+}
+
+.energyPanel p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.stageDashing {
+  box-shadow:
+    0 24px 70px rgba(30, 41, 59, 0.18),
+    0 0 0 2px rgba(251, 191, 36, 0.55),
+    0 0 48px rgba(249, 115, 22, 0.35);
+}
+
+.pickup {
+  position: absolute;
+  z-index: 6;
+  display: grid;
+  height: 2.55rem;
+  place-items: center;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 900;
+  text-shadow: 0 1px 8px rgba(15, 23, 42, 0.45);
+  animation: pickupFloat 920ms ease-in-out infinite;
+}
+
+.coinPickup {
+  border: 0.16rem solid rgba(254, 243, 199, 0.92);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.72), transparent 42%),
+    linear-gradient(180deg, #fbbf24, #d97706);
+  box-shadow:
+    0 10px 22px rgba(180, 83, 9, 0.28),
+    0 0 18px rgba(251, 191, 36, 0.45);
+}
+
+.energyPickup {
+  border: 0.16rem solid rgba(233, 213, 255, 0.9);
+  border-radius: 0.85rem;
+  background:
+    radial-gradient(circle at 70% 24%, rgba(255, 255, 255, 0.55), transparent 40%),
+    linear-gradient(180deg, #a855f7, #5b21b6);
+  box-shadow:
+    0 10px 22px rgba(91, 33, 182, 0.3),
+    0 0 20px rgba(168, 85, 247, 0.5);
+  transform: rotate(12deg);
+}
+
+.topPickup {
+  bottom: calc(50% + 2.1rem);
+}
+
+.bottomPickup {
+  top: calc(50% + 2.1rem);
+}
+
+.bottomPickup.energyPickup {
+  transform: rotate(-12deg) scaleY(-1);
+}
+
+.obstacleFaded {
+  opacity: 0.34;
+  filter: saturate(0.55);
+}
+
+.runnerDashing .runnerBody {
+  box-shadow:
+    0 12px 28px rgba(15, 23, 42, 0.28),
+    0 0 22px rgba(251, 191, 36, 0.72),
+    inset 0 -0.45rem 0 rgba(15, 23, 42, 0.14);
+}
+
+.runnerDashing .runnerTrail {
+  width: 3.4rem;
+  left: -3.3rem;
+  background: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.9));
+  opacity: 1;
+}
+
 .controlDeck {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.9rem;
+}
+
+.dashButton {
+  background: linear-gradient(135deg, #6d28d9, #9333ea);
+}
+
+.dashReady {
+  background: linear-gradient(135deg, #ea580c, #f59e0b);
+  box-shadow: 0 14px 34px rgba(234, 88, 12, 0.28);
+  animation: dashReadyPulse 900ms ease-in-out infinite;
 }
 
 .controlButton,
@@ -465,9 +615,60 @@
   }
 }
 
+@keyframes pickupFloat {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  50% {
+    translate: 0 -0.28rem;
+  }
+}
+
+@keyframes energyPulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+
+  50% {
+    filter: brightness(1.18);
+  }
+}
+
+@keyframes energyDash {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 1.4rem 0;
+  }
+}
+
+@keyframes dashReadyPulse {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
 @media (max-width: 860px) {
   .scoreboard {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .controlDeck {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dashButton {
+    grid-column: 1 / -1;
   }
 
   .stage {
@@ -479,6 +680,10 @@
   .scoreboard,
   .controlDeck {
     grid-template-columns: 1fr;
+  }
+
+  .dashButton {
+    grid-column: auto;
   }
 
   .metricCard {
