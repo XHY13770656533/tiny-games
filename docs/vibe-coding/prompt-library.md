@@ -36,10 +36,11 @@
 - 战场用 Canvas：三航道自动空战，战机固定在底部自动锁定开火，没有走位、瞄准或放置防御塔
 - 击落敌机积能量；每满 100 获得 1 次转动机会，机会可叠到 3，玩家自行选择时机转动
 - 转盘只能在战斗外组装 4–7 个扇区，单格 8–40，权重总和 100；进入战斗后方案锁定
-- 扇区效果至少覆盖维修、护甲、速射、散射、穿甲、清屏，并按策划案解锁
+- 扇区图鉴 18 种，至少覆盖维修、护甲、速射、散射、穿甲、清屏、激光、无人机、EMP、打捞
+- 其中 10 种效果可用局后金币升级到 Lv3；金币、升级、解锁分别写入 tiny-games:wheel-battle:coins / upgrades / unlocked
 - 波次和 Boss 技能需要预报窗口，供玩家决定何时转动
 - 3 关，每关末尾有独立机制 Boss，第 3 关为赤红母舰三阶段
-- localStorage 记录最高分，key 为 tiny-games:wheel-battle:high-score
+- localStorage 同时记录最高分，key 为 tiny-games:wheel-battle:high-score
 - 键盘 Space 与触控点按都能转动，窄屏不出现摇杆
 - 完成后把 games.ts 的 status 改为 available，并运行 npm run lint 和 npm run build
 ```

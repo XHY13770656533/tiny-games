@@ -71,12 +71,12 @@ export const games: GameMeta[] = [
     id: 'wheel-battle',
     title: '转盘大作战',
     description:
-      '战前组装转盘，战斗中战机自动开火。能量满一次就存一次转动机会，在波次和 Boss 窗口按下强化，用护甲、维修和特殊炮弹守住基地。',
+      '战前组装转盘，战斗中战机自动开火。能量满一次就存一次转动机会，在波次和 Boss 窗口按下强化；一局结束后用金币升级部分效果。',
     path: '/games/wheel-battle',
     category: 'strategy',
     difficulty: 'hard',
     status: 'planned',
-    tags: ['塔防', '转盘', '组装', '时机', 'Boss'],
+    tags: ['塔防', '转盘', '组装', '时机', '养成'],
     accentColor: '#dc2626',
   },
   {
