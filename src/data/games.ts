@@ -75,7 +75,7 @@ export const games: GameMeta[] = [
     path: '/games/wheel-battle',
     category: 'strategy',
     difficulty: 'hard',
-    status: 'planned',
+    status: 'available',
     tags: ['塔防', '转盘', '组装', '时机', '养成'],
     accentColor: '#dc2626',
   },

@@ -1,6 +1,6 @@
 # 转盘大作战 · 策划案
 
-> 状态：规划中  
+> 状态：可玩  
 > 游戏 id：`wheel-battle`  
 > 路由：`/games/wheel-battle`  
 > 目标平台：Tiny Games 纯前端（Vite + React + TypeScript + Canvas）  
@@ -872,7 +872,7 @@ src/games/wheel-battle/
   path: '/games/wheel-battle',
   category: 'strategy',
   difficulty: 'hard',
-  status: 'planned',
+  status: 'available',
   tags: ['塔防', '转盘', '组装', '时机', '养成'],
   accentColor: '#dc2626',
 }
