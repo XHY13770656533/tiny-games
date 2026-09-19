@@ -16,6 +16,7 @@ import MirrorFlyerGame from './games/mirror-flyer';
 import SummonMonstersGame from './games/summon-monsters';
 import StoneSkippingGame from './games/stone-skipping';
 import WolfSheepGame from './games/wolf-sheep';
+import WheelBattleGame from './games/wheel-battle';
 
 export const router = createBrowserRouter([
   {
@@ -32,6 +33,7 @@ export const router = createBrowserRouter([
       { path: 'games/pony-river', element: <PonyRiverGame /> },
       { path: 'games/electronic-pet', element: <ElectronicPetGame /> },
       { path: 'games/lucky-wheel', element: <LuckyWheelGame /> },
+      { path: 'games/wheel-battle', element: <WheelBattleGame /> },
       { path: 'games/tictactoe', element: <TictactoeGame /> },
       { path: 'games/memory', element: <MemoryGame /> },
       { path: 'games/snake', element: <SnakeGame /> },

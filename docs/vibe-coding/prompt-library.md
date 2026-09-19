@@ -26,6 +26,23 @@
 - 运行 npm run lint 和 npm run build
 ```
 
+## 新增转盘大作战
+
+```txt
+请按 docs/games/wheel-battle.md 实现转盘大作战，替换当前 src/games/wheel-battle 的占位页。
+要求：
+- 使用现有 GameLayout
+- 逻辑拆到 logic.ts，主循环用 requestAnimationFrame，卸载时清理
+- 战场用 Canvas：玩家战机自动开火，键盘/拖拽移动，敌机会刷新并对射
+- 击落敌机积能量，能量满后冻结战场并转动玩家组装的转盘
+- 转盘可在整备界面组装 4–7 个扇区，单格 8–40，权重总和 100
+- 扇区效果至少覆盖维修、护甲、速射、散射、穿甲、清屏，并按策划案解锁
+- 3 关，每关末尾有独立机制 Boss，第 3 关为赤红母舰三阶段
+- localStorage 记录最高分，key 为 tiny-games:wheel-battle:high-score
+- 移动端可拖拽走位，窄屏不溢出
+- 完成后把 games.ts 的 status 改为 available，并运行 npm run lint 和 npm run build
+```
+
 ## 新增贪吃蛇
 
 ```txt

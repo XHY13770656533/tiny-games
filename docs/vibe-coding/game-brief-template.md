@@ -1,6 +1,6 @@
 # Game Brief Template
 
-复制本模板用于描述一个新小游戏。
+复制本模板用于描述一个新小游戏。完整范例见 [`docs/games/wheel-battle.md`](../games/wheel-battle.md)。
 
 ## 游戏名称
 

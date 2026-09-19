@@ -68,6 +68,18 @@ export const games: GameMeta[] = [
     accentColor: '#0ea5e9',
   },
   {
+    id: 'wheel-battle',
+    title: '转盘大作战',
+    description:
+      '在雷霆战机式战场中自动开火击落敌机，积满能量后转动自己组装的转盘，用护甲、维修和特殊炮弹击败关底 Boss。',
+    path: '/games/wheel-battle',
+    category: 'reflex',
+    difficulty: 'hard',
+    status: 'planned',
+    tags: ['射击', '转盘', '组装', 'Boss', 'Canvas'],
+    accentColor: '#dc2626',
+  },
+  {
     id: 'lucky-wheel',
     title: '幸运转盘',
     description: '消耗金币转动转盘，利用奖励、道具和特殊事件累积金币，挑战 5 个逐步提高的关卡目标。',
