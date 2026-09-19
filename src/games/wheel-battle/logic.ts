@@ -276,9 +276,9 @@ export const levels = [
 
 const wavePlans: WaveConfig[][] = [
   [
-    { durationMs: 20000, spawnEveryMs: 2400, label: '中路侦察机' },
-    { durationMs: 32000, spawnEveryMs: 1900, label: '混编推进' },
-    { durationMs: 34000, spawnEveryMs: 1600, label: '三路压迫' },
+    { durationMs: 22000, spawnEveryMs: 2800, label: '中路侦察机' },
+    { durationMs: 34000, spawnEveryMs: 2200, label: '混编推进' },
+    { durationMs: 36000, spawnEveryMs: 1800, label: '三路压迫' },
   ],
   [
     { durationMs: 16000, spawnEveryMs: 1700, label: '左右夹击' },
@@ -1179,8 +1179,7 @@ function spawnEnemy(state: WheelBattleState) {
     type = Math.random() < 0.12 + level * 0.08 ? 'gunship' : 'scout';
     lane = level === 0 ? 'mid' : pickLane();
   } else if (wave === 1) {
-    const roll = Math.random();
-    type = roll < 0.18 + level * 0.08 ? 'gunship' : 'scout';
+    type = Math.random() < 0.08 + level * 0.08 ? 'gunship' : 'scout';
     lane = pickLane();
   } else {
     const roll = Math.random();
@@ -1197,7 +1196,7 @@ function spawnEnemy(state: WheelBattleState) {
     hp: stats.hp,
     maxHp: stats.hp,
     shield: type === 'elite' ? 24 : 0,
-    fireCooldownMs: 400 + Math.random() * 600,
+    fireCooldownMs: (state.levelIndex === 0 ? 900 : 400) + Math.random() * 600,
     hoverMs: 0,
   });
   state.nextEntityId += 1;
@@ -1221,7 +1220,11 @@ function tickEnemies(state: WheelBattleState, dtMs: number) {
     enemy.fireCooldownMs -= dtMs;
     if (enemy.fireCooldownMs <= 0 && state.effects.empMs <= 0) {
       fireEnemy(state, enemy);
-      enemy.fireCooldownMs = enemy.type === 'scout' ? 1700 : enemy.type === 'gunship' ? 900 : 1400;
+    enemy.fireCooldownMs = enemy.type === 'scout'
+      ? state.levelIndex === 0 ? 2600 : 1700
+      : enemy.type === 'gunship'
+        ? state.levelIndex === 0 ? 1400 : 900
+        : 1400;
     }
   }
   return state;
@@ -1233,8 +1236,9 @@ function fireEnemy(state: WheelBattleState, enemy: Enemy) {
   }
 
   const toPlayer = normalize({ x: playerX - enemy.position.x, y: playerY - enemy.position.y });
-  const speed = 0.028 * timeScale(state);
+  const speed = (state.levelIndex === 0 ? 0.02 : 0.028) * timeScale(state);
   const damage = enemy.type === 'scout' ? 8 : enemy.type === 'gunship' ? 10 : 12;
+  const spread = state.levelIndex === 0 ? (Math.random() - 0.5) * 0.28 : 0;
 
   if (enemy.type === 'elite') {
     for (const angle of [-0.4, -0.2, 0, 0.2, 0.4]) {
@@ -1254,7 +1258,7 @@ function fireEnemy(state: WheelBattleState, enemy: Enemy) {
   pushBullet(state, {
     faction: 'enemy',
     position: { ...enemy.position },
-    velocity: { x: toPlayer.x * speed, y: toPlayer.y * speed },
+    velocity: rotate(toPlayer, spread, speed),
     damage,
     pierceLeft: 0,
     homing: false,

@@ -63,6 +63,8 @@ export default function WheelBattleGame() {
   const gameRef = useRef(game);
   const lastFrameRef = useRef<number | null>(null);
   const lastHudRef = useRef(0);
+  const spinRequestRef = useRef(false);
+  const pauseRequestRef = useRef(false);
 
   gameRef.current = game;
 
@@ -104,7 +106,7 @@ export default function WheelBattleGame() {
   }, [game.phase]);
 
   useEffect(() => {
-    if (!isCombatPhase(game.phase) || game.paused) {
+    if (!isCombatPhase(game.phase)) {
       lastFrameRef.current = null;
       paint(game);
       return undefined;
@@ -118,23 +120,46 @@ export default function WheelBattleGame() {
       }
       const delta = Math.min(maxFrameDeltaMs, now - lastFrameRef.current);
       lastFrameRef.current = now;
-      const next = tick(gameRef.current, delta);
+      let current = gameRef.current;
+
+      let didInput = false;
+      if (pauseRequestRef.current) {
+        current = { ...current, paused: !current.paused };
+        pauseRequestRef.current = false;
+        didInput = true;
+      }
+
+      if (spinRequestRef.current) {
+        const spun = beginSpin(current);
+        if (spun.spinUsed !== current.spinUsed && spun.pendingSpinId) {
+          const center = getSegmentCenterAngle(spun.wheel, spun.pendingSpinId);
+          setWheelRotation((rotation) => {
+            const target = (360 - center) % 360;
+            return (Math.floor(rotation / 360) + spinTurns) * 360 + target;
+          });
+        }
+        current = spun;
+        spinRequestRef.current = false;
+        didInput = true;
+      }
+
+      const next = current.paused ? current : tick(current, delta);
       gameRef.current = next;
       paint(next);
 
-      if (!isCombatPhase(next.phase) || now - lastHudRef.current > 50) {
+      if (!isCombatPhase(next.phase) || didInput || now - lastHudRef.current > 50) {
         lastHudRef.current = now;
         setGame(next);
       }
 
-      if (isCombatPhase(next.phase) && !next.paused) {
+      if (isCombatPhase(next.phase)) {
         frameId = window.requestAnimationFrame(loop);
       }
     }
 
     frameId = window.requestAnimationFrame(loop);
     return () => window.cancelAnimationFrame(frameId);
-  }, [game.phase, game.paused]);
+  }, [game.phase]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -174,23 +199,11 @@ export default function WheelBattleGame() {
   }
 
   function handleSpin() {
-    updateGame((current) => {
-      const next = beginSpin(current);
-      if (next.pendingSpinId) {
-        const center = getSegmentCenterAngle(next.wheel, next.pendingSpinId);
-        setWheelRotation((rotation) => {
-          const target = (360 - center) % 360;
-          return (Math.floor(rotation / 360) + spinTurns) * 360 + target;
-        });
-      }
-      return next;
-    });
+    spinRequestRef.current = true;
   }
 
   function togglePause() {
-    updateGame((current) => (
-      isCombatPhase(current.phase) ? { ...current, paused: !current.paused } : current
-    ));
+    pauseRequestRef.current = true;
   }
 
   function enterBattle() {
