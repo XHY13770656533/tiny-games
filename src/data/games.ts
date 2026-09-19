@@ -68,6 +68,18 @@ export const games: GameMeta[] = [
     accentColor: '#0ea5e9',
   },
   {
+    id: 'wheel-battle',
+    title: '转盘大作战',
+    description:
+      '战前组装转盘，战斗中战机自动开火。能量满一次就存一次转动机会，在波次和 Boss 窗口按下强化；一局结束后用金币升级部分效果。',
+    path: '/games/wheel-battle',
+    category: 'strategy',
+    difficulty: 'hard',
+    status: 'available',
+    tags: ['塔防', '转盘', '组装', '时机', '养成'],
+    accentColor: '#dc2626',
+  },
+  {
     id: 'lucky-wheel',
     title: '幸运转盘',
     description: '消耗金币转动转盘，利用奖励、道具和特殊事件累积金币，挑战 5 个逐步提高的关卡目标。',
