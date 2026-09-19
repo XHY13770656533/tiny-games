@@ -71,12 +71,12 @@ export const games: GameMeta[] = [
     id: 'wheel-battle',
     title: '转盘大作战',
     description:
-      '在雷霆战机式战场中自动开火击落敌机，积满能量后转动自己组装的转盘，用护甲、维修和特殊炮弹击败关底 Boss。',
+      '战前组装转盘，战斗中战机自动开火。能量满一次就存一次转动机会，在波次和 Boss 窗口按下强化，用护甲、维修和特殊炮弹守住基地。',
     path: '/games/wheel-battle',
-    category: 'reflex',
+    category: 'strategy',
     difficulty: 'hard',
     status: 'planned',
-    tags: ['射击', '转盘', '组装', 'Boss', 'Canvas'],
+    tags: ['塔防', '转盘', '组装', '时机', 'Boss'],
     accentColor: '#dc2626',
   },
   {
