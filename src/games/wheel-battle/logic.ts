@@ -782,12 +782,15 @@ export function beginSpin(state: WheelBattleState, random = Math.random): WheelB
   const selected = pickWeighted(state.wheel, random);
   return {
     ...state,
-    phase: 'spinning',
     spinCharges: state.spinCharges - 1,
     spinUsed: state.spinUsed + 1,
     spinningMs: spinAnimMs,
     pendingSpinId: selected.id,
     lastSpinId: selected.id,
+    player: {
+      ...state.player,
+      iFrameMs: Math.max(state.player.iFrameMs, 500),
+    },
   };
 }
 
@@ -821,7 +824,6 @@ export function tick(state: WheelBattleState, dtMs: number): WheelBattleState {
     if (next.spinningMs === 0 && next.pendingSpinId) {
       next = applySectorEffect(next, next.pendingSpinId);
       next.pendingSpinId = null;
-      next.phase = 'combat';
     }
   }
 
@@ -1172,7 +1174,7 @@ function spawnEnemy(state: WheelBattleState) {
   let type: EnemyType;
   let lane: Lane;
 
-  if (level === 0 && state.levelElapsedMs < 12000) {
+  if (level === 0 && state.levelElapsedMs < 40000) {
     type = 'scout';
     lane = 'mid';
   } else if (wave === 0) {
@@ -1205,7 +1207,7 @@ function spawnEnemy(state: WheelBattleState) {
 function tickEnemies(state: WheelBattleState, dtMs: number) {
   const slow = timeScale(state);
   for (const enemy of state.enemies) {
-    const speed = enemy.type === 'scout' ? 0.018 : enemy.type === 'gunship' ? 0.013 : 0.011;
+    const speed = (enemy.type === 'scout' ? (state.levelIndex === 0 ? 0.012 : 0.018) : enemy.type === 'gunship' ? 0.013 : 0.011);
     if (enemy.type === 'gunship' && enemy.position.y >= 26 && enemy.hoverMs < 3200) {
       enemy.hoverMs += dtMs;
       enemy.position.x += Math.sin(state.elapsedMs / 220) * 0.012 * (enemy.lane === 'right' ? -1 : 1);
@@ -1751,7 +1753,11 @@ function resolveLeaks(state: WheelBattleState) {
       continue;
     }
 
-    const damage = enemy.type === 'scout' ? 10 : enemy.type === 'gunship' ? 18 : 28;
+    const damage = enemy.type === 'scout'
+      ? state.levelIndex === 0 ? 6 : 10
+      : enemy.type === 'gunship'
+        ? state.levelIndex === 0 ? 12 : 18
+        : 28;
     hurtPlayer(state, damage);
     state.leaks += 1;
     state.score = Math.max(0, state.score - (enemy.type === 'scout' ? 15 : enemy.type === 'gunship' ? 35 : 70));
